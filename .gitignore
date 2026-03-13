@@ -1,0 +1,72 @@
+# =========================
+# IDE (CLion / IntelliJ)
+# =========================
+.idea/
+*.iml
+
+# =========================
+# CMake
+# =========================
+cmake-build-debug/
+cmake-build-release/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+CTestTestfile.cmake
+
+# =========================
+# Build / Compilation
+# =========================
+build/
+bin/
+out/
+
+# Executables
+*.exe
+*.out
+*.app
+*.elf
+
+# Object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# Libraries
+*.a
+*.so
+*.so.*
+*.dll
+*.dylib
+
+# =========================
+# Debug / Profiling
+# =========================
+*.dSYM/
+*.gcda
+*.gcno
+*.gcov
+gmon.out
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.temp
+*.swp
+*~
