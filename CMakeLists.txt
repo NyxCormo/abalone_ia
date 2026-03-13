@@ -3,4 +3,11 @@ project(Abalone)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Abalone main.cpp)
+set(CORE
+        src/core/Position.cpp
+        src/core/Board.cpp
+)
+
+add_executable(Abalone src/main.cpp
+        ${CORE}
+)
