@@ -10,22 +10,22 @@
 #include "Position.h"
 
 enum class Cell {
-    EMPTY,
-    BLACK,
-    WHITE,
+    Empty,
+    Black,
+    White,
 };
 
 enum class Player {
-    BLACK,
-    WHITE,
+    Black,
+    White,
 };
 
 inline Player opponent(Player p) {
-    return p == Player::BLACK ? Player::WHITE : Player::BLACK;
+    return p == Player::Black ? Player::White : Player::Black;
 }
 
 inline Cell playerToCell(Player p) {
-    return p == Player::BLACK ? Cell::BLACK : Cell::WHITE;
+    return p == Player::Black ? Cell::Black : Cell::White;
 }
 
 class Board {

@@ -8,45 +8,45 @@
 
 Board::Board() : black_count_(0), white_count_(0) {
     for (auto& row : cells_) {
-        row.fill(Cell::EMPTY);
+        row.fill(Cell::Empty);
     }
 }
 
 void Board::setup() {
-    set(Position(-4, 4), Cell::BLACK);
-    set(Position(-3, 4), Cell::BLACK);
-    set(Position(-2, 4), Cell::BLACK);
-    set(Position(-1, 4), Cell::BLACK);
-    set(Position(0, 4), Cell::BLACK);
+    set(Position(-4, 4), Cell::Black);
+    set(Position(-3, 4), Cell::Black);
+    set(Position(-2, 4), Cell::Black);
+    set(Position(-1, 4), Cell::Black);
+    set(Position(0, 4), Cell::Black);
 
-    set(Position(-4, 3), Cell::BLACK);
-    set(Position(-3, 3), Cell::BLACK);
-    set(Position(-2, 3), Cell::BLACK);
-    set(Position(-1, 3), Cell::BLACK);
-    set(Position(0, 3), Cell::BLACK);
-    set(Position(1, 3), Cell::BLACK);
+    set(Position(-4, 3), Cell::Black);
+    set(Position(-3, 3), Cell::Black);
+    set(Position(-2, 3), Cell::Black);
+    set(Position(-1, 3), Cell::Black);
+    set(Position(0, 3), Cell::Black);
+    set(Position(1, 3), Cell::Black);
 
-    set(Position(-2, 2), Cell::BLACK);
-    set(Position(-1, 2), Cell::BLACK);
-    set(Position(0, 2), Cell::BLACK);
+    set(Position(-2, 2), Cell::Black);
+    set(Position(-1, 2), Cell::Black);
+    set(Position(0, 2), Cell::Black);
 
 
-    set(Position(0, -4), Cell::WHITE);
-    set(Position(1, -4), Cell::WHITE);
-    set(Position(2, -4), Cell::WHITE);
-    set(Position(3, -4), Cell::WHITE);
-    set(Position(4, -4), Cell::WHITE);
+    set(Position(0, -4), Cell::White);
+    set(Position(1, -4), Cell::White);
+    set(Position(2, -4), Cell::White);
+    set(Position(3, -4), Cell::White);
+    set(Position(4, -4), Cell::White);
 
-    set(Position(-1, -3), Cell::WHITE);
-    set(Position(0, -3), Cell::WHITE);
-    set(Position(1, -3), Cell::WHITE);
-    set(Position(2, -3), Cell::WHITE);
-    set(Position(3, -3), Cell::WHITE);
-    set(Position(4, -3), Cell::WHITE);
+    set(Position(-1, -3), Cell::White);
+    set(Position(0, -3), Cell::White);
+    set(Position(1, -3), Cell::White);
+    set(Position(2, -3), Cell::White);
+    set(Position(3, -3), Cell::White);
+    set(Position(4, -3), Cell::White);
 
-    set(Position(0, -2), Cell::WHITE);
-    set(Position(1, -2), Cell::WHITE);
-    set(Position(2, -2), Cell::WHITE);
+    set(Position(0, -2), Cell::White);
+    set(Position(1, -2), Cell::White);
+    set(Position(2, -2), Cell::White);
 
     setBlackCount(14);
     setWhiteCount(14);
@@ -62,7 +62,7 @@ void Board::setWhiteCount(int count) {
 
 Cell Board::get(const Position& pos) const {
     if (!pos.isValid()) {
-        return Cell::EMPTY;
+        return Cell::Empty;
     }
     return cells_[toIndex(pos.q())][toIndex(pos.r())];
 }
@@ -73,14 +73,24 @@ void Board::set(const Position& pos, Cell cell) {
     }
 }
 
+int Board::ejectMarble(Player player) {
+    if (player == Player::Black) {
+        black_count_--;
+        return black_count_;
+    } else {
+        white_count_--;
+        return white_count_;
+    }
+}
+
 bool Board::hasMarble(const Position& pos, const Player player) const {
     Cell cell = get(pos);
-    return (player == Player::BLACK && cell == Cell::BLACK) ||
-           (player == Player::WHITE && cell == Cell::WHITE);
+    return (player == Player::Black && cell == Cell::Black) ||
+           (player == Player::White && cell == Cell::White);
 }
 
 bool Board::isEmpty(const Position& pos) const {
-    return get(pos) == Cell::EMPTY;
+    return get(pos) == Cell::Empty;
 }
 
 bool Board::isGameOver() const {
@@ -88,7 +98,7 @@ bool Board::isGameOver() const {
 }
 
 Player Board::winner() const {
-    return black_count_ > white_count_ ? Player::BLACK : Player::WHITE;
+    return black_count_ > white_count_ ? Player::Black : Player::White;
 }
 
 int Board::countMarbles(const Player player) const {
@@ -143,9 +153,9 @@ std::string Board::toString() const {
             Position pos(q, r);
             Cell cell = get(pos);
 
-            if (cell == Cell::BLACK) {
+            if (cell == Cell::Black) {
                 oss << "● ";
-            } else if (cell == Cell::WHITE) {
+            } else if (cell == Cell::White) {
                 oss << "○ ";
             } else {
                 oss << "· ";

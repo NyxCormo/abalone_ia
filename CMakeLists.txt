@@ -8,6 +8,15 @@ set(CORE
         src/core/Board.cpp
 )
 
+set(RENDER
+        src/render/Renderer.cpp
+)
+
 add_executable(Abalone src/main.cpp
         ${CORE}
+        ${RENDER}
 )
+
+find_package(raylib REQUIRED)
+
+target_link_libraries(Abalone raylib)
