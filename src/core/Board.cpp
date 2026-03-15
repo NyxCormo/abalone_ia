@@ -1,12 +1,7 @@
-//
-// Created by nyx on 3/13/26.
-//
-
 #include "Board.h"
 #include <sstream>
-#include <iomanip>
 
-Board::Board() : black_count_(0), white_count_(0) {
+Board::Board() : black_count_(0), white_count_(0), black_ejected_(0), white_ejected_(0) {
     for (auto& row : cells_) {
         row.fill(Cell::Empty);
     }
@@ -30,7 +25,6 @@ void Board::setup() {
     set(Position(-1, 2), Cell::Black);
     set(Position(0, 2), Cell::Black);
 
-
     set(Position(0, -4), Cell::White);
     set(Position(1, -4), Cell::White);
     set(Position(2, -4), Cell::White);
@@ -48,8 +42,10 @@ void Board::setup() {
     set(Position(1, -2), Cell::White);
     set(Position(2, -2), Cell::White);
 
-    setBlackCount(14);
-    setWhiteCount(14);
+    black_count_ = 14;
+    white_count_ = 14;
+    black_ejected_ = 0;
+    white_ejected_ = 0;
 }
 
 void Board::setBlackCount(int count) {
@@ -73,16 +69,6 @@ void Board::set(const Position& pos, Cell cell) {
     }
 }
 
-int Board::ejectMarble(Player player) {
-    if (player == Player::Black) {
-        black_count_--;
-        return black_count_;
-    } else {
-        white_count_--;
-        return white_count_;
-    }
-}
-
 bool Board::hasMarble(const Position& pos, const Player player) const {
     Cell cell = get(pos);
     return (player == Player::Black && cell == Cell::Black) ||
@@ -94,26 +80,17 @@ bool Board::isEmpty(const Position& pos) const {
 }
 
 bool Board::isGameOver() const {
-    return black_count_ == 8 || white_count_ == 8;
+    return black_ejected_ >= 6 || white_ejected_ >= 6;
 }
 
 Player Board::winner() const {
+    if (black_ejected_ >= 6) return Player::White;
+    if (white_ejected_ >= 6) return Player::Black;
     return black_count_ > white_count_ ? Player::Black : Player::White;
 }
 
 int Board::countMarbles(const Player player) const {
-    int count = 0;
-    const Cell target = playerToCell(player);
-
-    for (int q = -4; q <= 4; q++) {
-        for (int r = -4; r <= 4; r++) {
-            Position pos(q, r);
-            if (pos.isValid() && get(pos) == target) {
-                count++;
-            }
-        }
-    }
-    return count;
+    return player == Player::Black ? black_count_ : white_count_;
 }
 
 std::vector<Position> Board::getMarblePositions(const Player player) const {
@@ -135,17 +112,13 @@ std::string Board::toString() const {
     std::ostringstream oss;
 
     oss << "\n  Abalone Board\n";
-    oss << "  Black: " << (black_count_) << " billes (éjectées: " << 14 - black_count_ << ")\n";
-    oss << "  White: " << (white_count_) << " billes (éjectées: " << 14 - white_count_ << ")\n\n";
+    oss << "  Black: " << black_count_ << " billes (éjectées: " << black_ejected_ << ")\n";
+    oss << "  White: " << white_count_ << " billes (éjectées: " << white_ejected_ << ")\n\n";
 
-    // Affichage du plateau hexagonal
-    // r va de -4 à +4, mais on affiche de haut en bas
     for (int r = -4; r <= 4; r++) {
-        // Indentation pour forme hexagonale
         int indent = std::abs(r);
         oss << std::string(indent * 2, ' ');
 
-        // Afficher les cellules de cette rangée
         int q_start = std::max(-4, -4 - r);
         int q_end = std::min(4, 4 - r);
 

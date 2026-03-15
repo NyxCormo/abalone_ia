@@ -1,11 +1,8 @@
-//
-// Created by nyx on 3/13/26.
-//
-
 #ifndef ABALONE_BOARD_H
 #define ABALONE_BOARD_H
 #include <array>
 #include <vector>
+#include <string>
 
 #include "Position.h"
 
@@ -29,15 +26,14 @@ inline Cell playerToCell(Player p) {
 }
 
 class Board {
-
     std::array<std::array<Cell, 9>, 9> cells_;
-
     int black_count_;
     int white_count_;
+    int black_ejected_;
+    int white_ejected_;
 
 public:
     Board();
-
     void setup();
 
     Cell get(const Position& pos) const;
@@ -47,24 +43,24 @@ public:
     void setWhiteCount(int count);
 
     bool hasMarble(const Position& pos, Player player) const;
-
     bool isEmpty(const Position& pos) const;
 
-    int ejectMarble(Player player);
+    void ejectBlack() { black_ejected_++; black_count_--; }
+    void ejectWhite() { white_ejected_++; white_count_--; }
+
+    int blackEjected() const { return black_ejected_; }
+    int whiteEjected() const { return white_ejected_; }
 
     bool isGameOver() const;
     Player winner() const;
 
-    int countMarbles(Player player) const ;
-
+    int countMarbles(Player player) const;
     std::vector<Position> getMarblePositions(Player player) const;
 
     std::string toString() const;
 
 private:
-
     static int toIndex(const int coord) { return coord + 4; }
-
 };
 
 

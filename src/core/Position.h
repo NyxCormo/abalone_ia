@@ -48,7 +48,14 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Position& pos);
 };
 
-
+namespace std {
+    template<>
+    struct hash<Position> {
+        size_t operator()(const Position& pos) const {
+            return hash<int>()(pos.q()) ^ (hash<int>()(pos.r()) << 1);
+        }
+    };
+}
 
 
 #endif //ABALONE_POSITION_H
