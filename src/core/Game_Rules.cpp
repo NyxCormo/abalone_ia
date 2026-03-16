@@ -65,7 +65,7 @@ void Game_Rules::applyInlineMove(Board& board, const Move& move, Player player) 
             board.ejectBlack();
         }
 
-        for (int i = opponentMarbles.size() - 2; i >= 0; i--) {
+        for (int i = static_cast<int>(opponentMarbles.size()) - 2; i >= 0; i--) {
             Cell cell = board.get(opponentMarbles[i]);
             board.set(opponentMarbles[i+1], cell);
         }
@@ -77,7 +77,7 @@ void Game_Rules::applyInlineMove(Board& board, const Move& move, Player player) 
         Cell lastOpponentCell = board.get(opponentMarbles.back());
         board.set(afterOpponent, lastOpponentCell);
 
-        for (int i = opponentMarbles.size() - 2; i >= 0; i--) {
+        for (int i = static_cast<int>(opponentMarbles.size()) - 2; i >= 0; i--) {
             Cell cell = board.get(opponentMarbles[i]);
             board.set(opponentMarbles[i+1], cell);
         }

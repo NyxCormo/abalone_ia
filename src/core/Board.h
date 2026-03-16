@@ -36,28 +36,28 @@ public:
     Board();
     void setup();
 
-    Cell get(const Position& pos) const;
+    [[nodiscard]] Cell get(const Position& pos) const;
     void set(const Position& pos, Cell cell);
 
     void setBlackCount(int count);
     void setWhiteCount(int count);
 
-    bool hasMarble(const Position& pos, Player player) const;
-    bool isEmpty(const Position& pos) const;
+    [[nodiscard]] bool hasMarble(const Position& pos, Player player) const;
+    [[nodiscard]] bool isEmpty(const Position& pos) const;
 
     void ejectBlack() { black_ejected_++; black_count_--; }
     void ejectWhite() { white_ejected_++; white_count_--; }
 
-    int blackEjected() const { return black_ejected_; }
-    int whiteEjected() const { return white_ejected_; }
+    [[nodiscard]] int blackEjected() const { return black_ejected_; }
+    [[nodiscard]] int whiteEjected() const { return white_ejected_; }
 
-    bool isGameOver() const;
-    Player winner() const;
+    [[nodiscard]] bool isGameOver() const;
+    [[nodiscard]] Player winner() const;
 
-    int countMarbles(Player player) const;
-    std::vector<Position> getMarblePositions(Player player) const;
+    [[nodiscard]] int countMarbles(Player player) const;
+    [[nodiscard]] std::vector<Position> getMarblePositions(Player player) const;
 
-    std::string toString() const;
+    [[nodiscard]] std::string toString() const;
 
 private:
     static int toIndex(const int coord) { return coord + 4; }

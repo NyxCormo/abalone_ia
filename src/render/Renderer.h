@@ -3,7 +3,6 @@
 #include "raylib.h"
 #include "../core/Board.h"
 #include "../core/Position.h"
-#include <cmath>
 #include <vector>
 #include <optional>
 
@@ -16,9 +15,9 @@ public:
     Renderer();
     ~Renderer();
     void draw(const Board& board);
-    std::optional<Position> getClickedHex(Vector2 mousePos);
-    void drawSelectionWheel(Position center, const std::vector<Direction>& directions);
-    std::optional<Direction> getClickedDirection(Position hexPos, Vector2 mousePos);
+    [[nodiscard]] std::optional<Position> getClickedHex(Vector2 mousePos) const;
+    void drawSelectionWheel(Position center, const std::vector<Direction>& directions) const;
+    [[nodiscard]] std::optional<Direction> getClickedDirection(Position hexPos, Vector2 mousePos) const;
 
 private:
 
@@ -33,6 +32,6 @@ private:
     Texture2D tableWood;
 
     static Vector3 hexToWorld(int q, int r);
-    static Vector2 worldToScreen(Vector3 worldPos, Camera3D cam);
+    static Vector2 worldToScreen(Vector3 worldPos, const Camera3D &cam);
     static bool isPointInHex(Vector2 point, Vector2 hexCenter, float radius);
 };

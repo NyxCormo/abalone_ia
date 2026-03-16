@@ -1,7 +1,7 @@
 #include "Board.h"
 #include <sstream>
 
-Board::Board() : black_count_(0), white_count_(0), black_ejected_(0), white_ejected_(0) {
+Board::Board() : cells_{}, black_count_(0), white_count_(0), black_ejected_(0), white_ejected_(0) {
     for (auto& row : cells_) {
         row.fill(Cell::Empty);
     }

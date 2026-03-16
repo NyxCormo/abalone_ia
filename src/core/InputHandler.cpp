@@ -1,7 +1,9 @@
 #include "InputHandler.h"
 #include <algorithm>
 
-InputHandler::InputHandler() {}
+#include "MoveGenerator.h"
+
+InputHandler::InputHandler() = default;
 
 void InputHandler::selectHex(Position pos, Player player, const Board& board)
 {
@@ -91,8 +93,7 @@ std::optional<Move> InputHandler::tryCreateMove(Direction dir, const Board& boar
     return std::nullopt;
 }
 
-bool InputHandler::areAdjacent(const Position& a, const Position& b) const
-{
+bool InputHandler::areAdjacent(const Position& a, const Position& b) {
     return a.distance(b) == 1;
 }
 

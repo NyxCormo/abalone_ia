@@ -42,11 +42,11 @@ std::vector<Move> MoveGenerator::generateMoves(const Board& board, Player player
 void MoveGenerator::generateSingleMarbleMoves(
     const Board& board,
     Player player,
-    const Position& pos,
+    const Position& marble,
     std::vector<Move>& moves
     ) {
     for (Direction dir : ALL_DIRECTIONS) {
-        Move move(pos, dir);
+        Move move(marble, dir);
 
         if (isLegalMove(board, player, move)) {
             moves.push_back(move);
@@ -170,19 +170,12 @@ bool MoveGenerator::isLegalInlineMove(const Board& board, Player player, const M
 }
 
 bool MoveGenerator::isLegalSideStepMove(const Board& board, Player player, const Move& move) {
-    auto destinations = move.destinations();
+    const auto& destinations = move.destinations();
 
-    for (const Position& dest : destinations) {
-        if (!dest.isValid()) {
-            return false;
-        }
-
-        if (!board.isEmpty(dest)) {
-            return false;
-        }
-    }
-
-    return true;
+    return std::all_of(destinations.begin(), destinations.end(),
+        [&](const Position& dest) {
+            return dest.isValid() && board.isEmpty(dest);
+        });
 }
 
 int MoveGenerator::countPushedMarbles(const Board &board, Player player, const Move &move) {

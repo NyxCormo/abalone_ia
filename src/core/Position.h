@@ -21,17 +21,17 @@ public:
 
     Position(int q, int r) : q_(q), r_(r) {}
 
-    int q() const { return q_; }
-    int r() const { return r_; }
-    int s() const { return -q_ - r_; }
+    [[nodiscard]] int q() const { return q_; }
+    [[nodiscard]] int r() const { return r_; }
+    [[nodiscard]] int s() const { return -q_ - r_; }
 
-    bool isValid() const {
+    [[nodiscard]] bool isValid() const {
         int s = -q_ - r_;
         return std::abs(q_) <= 4 && std::abs(r_) <= 4 && std::abs(s) <= 4;
     }
-    Position neighbor(Direction dir) const;
+    [[nodiscard]] Position neighbor(Direction dir) const;
 
-    int distance(const Position& other) const {
+    [[nodiscard]] int distance(const Position& other) const {
         return (std::abs(q_ - other.q_) +
                 std::abs(r_ - other.r_) +
                 std::abs(s() - other.s())) / 2;
@@ -48,14 +48,12 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Position& pos);
 };
 
-namespace std {
-    template<>
-    struct hash<Position> {
-        size_t operator()(const Position& pos) const {
-            return hash<int>()(pos.q()) ^ (hash<int>()(pos.r()) << 1);
-        }
-    };
-}
+template<>
+struct std::hash<Position> {
+    size_t operator()(const Position& pos) const noexcept {
+        return hash<int>()(pos.q()) ^ (hash<int>()(pos.r()) << 1);
+    }
+};
 
 
 #endif //ABALONE_POSITION_H

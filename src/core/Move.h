@@ -21,26 +21,26 @@ public:
     Move(const Position& marble, Direction dir);
     Move(const std::vector<Position>& marbles, Direction dir);
 
-    const std::vector<Position>& marbles() const { return marbles_; }
-    Direction direction() const { return direction_; }
-    MoveType type() const { return moveType_; }
-    int marbleCount() const { return marbles_.size(); }
+    [[nodiscard]] const std::vector<Position>& marbles() const { return marbles_; }
+    [[nodiscard]] Direction direction() const { return direction_; }
+    [[nodiscard]] MoveType type() const { return moveType_; }
+    [[nodiscard]] int marbleCount() const { return static_cast<int>(marbles_.size()); }
 
-    Position front() const { return marbles_.front(); }
-    Position back() const { return marbles_.back(); }
+    [[nodiscard]] Position front() const { return marbles_.front(); }
+    [[nodiscard]] Position back() const { return marbles_.back(); }
 
-    bool isInline() const { return moveType_ == MoveType::INLINE; }
-    bool isSidestep() const { return moveType_ == MoveType::SIDESTEP; }
+    [[nodiscard]] bool isInline() const { return moveType_ == MoveType::INLINE; }
+    [[nodiscard]] bool isSidestep() const { return moveType_ == MoveType::SIDESTEP; }
 
-    std::vector<Position> destinations() const;
-    std::string toString() const;
+    [[nodiscard]] std::vector<Position> destinations() const;
+    [[nodiscard]] std::string toString() const;
 
     bool operator==(const Move& other) const;
     bool operator!=(const Move& other) const { return !(*this == other); }
 
 private:
-    MoveType detectMoveType() const;
-    bool areAligned(Direction dir) const;
+    [[nodiscard]] MoveType detectMoveType() const;
+    [[nodiscard]] bool areAligned(Direction dir) const;
 };
 
 #endif
