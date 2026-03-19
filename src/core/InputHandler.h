@@ -14,12 +14,13 @@ public:
 
     void selectHex(Position pos, Player player, const Board& board);
     void addToSelection(Position pos, Player player, const Board& board);
+    void removeFromSelection(Position pos);
     void clearSelection();
-    
+
     [[nodiscard]] bool hasSelection() const;
     [[nodiscard]] const std::vector<Position>& getSelectedMarbles() const;
     [[nodiscard]] std::vector<Direction> getValidDirections(const Board& board, Player player) const;
-    
+
     [[nodiscard]] std::optional<Move> tryCreateMove(Direction dir, const Board& board, Player player) const;
 
 private:
@@ -27,6 +28,7 @@ private:
 
     static bool areAdjacent(const Position& a, const Position& b);
     [[nodiscard]] bool areAligned() const;
+    [[nodiscard]] bool isValidGroup(const std::vector<Position>& group) const;
 };
 
 #endif

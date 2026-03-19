@@ -13,14 +13,10 @@ Game::Game()
       wheelCenter_{},
       validDirections_{},
       moveCount_{0},
-      gameOver_{false}
+      gameOver_{false},
+      isDragging_{false}
 {
     board_.setup();
-
-    std::cout << "=== ABALONE INTERACTIVE ===" << std::endl;
-    std::cout << "Click on your marbles to select (up to 3 aligned)" << std::endl;
-    std::cout << "Click on direction wheel to move" << std::endl;
-    std::cout << "R: Reset game" << std::endl;
 }
 
 void Game::run() {
@@ -44,13 +40,20 @@ void Game::handleInput() {
         return;
     }
 
-    if (gameOver_ || !IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (gameOver_) {
         return;
     }
 
     Vector2 mousePos = GetMousePosition();
 
-    if (showWheel_) {
+    if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+        input_.clearSelection();
+        showWheel_ = false;
+        isDragging_ = false;
+        return;
+    }
+
+    if (showWheel_ && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         auto clickedDir = renderer_->getClickedDirection(wheelCenter_, mousePos);
 
         if (clickedDir.has_value()) {
@@ -79,27 +82,37 @@ void Game::handleInput() {
         } else {
             showWheel_ = false;
         }
-    } else {
+        return;
+    }
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !showWheel_) {
+        isDragging_ = true;
+
         auto clickedHex = renderer_->getClickedHex(mousePos);
+        if (clickedHex.has_value() && board_.hasMarble(clickedHex.value(), currentPlayer_)) {
+            input_.addToSelection(clickedHex.value(), currentPlayer_, board_);
+        }
+    }
 
-        if (clickedHex.has_value()) {
-            Position pos = clickedHex.value();
+    if (isDragging_ && IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+        auto hoveredHex = renderer_->getClickedHex(mousePos);
+        if (hoveredHex.has_value() && board_.hasMarble(hoveredHex.value(), currentPlayer_)) {
+            input_.addToSelection(hoveredHex.value(), currentPlayer_, board_);
+        }
+    }
 
-            if (board_.hasMarble(pos, currentPlayer_)) {
-                if (IsKeyDown(KEY_LEFT_SHIFT)) {
-                    input_.addToSelection(pos, currentPlayer_, board_);
-                } else {
-                    input_.selectHex(pos, currentPlayer_, board_);
-                }
+    if (isDragging_ && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+        isDragging_ = false;
 
-                if (input_.hasSelection()) {
-                    validDirections_ = input_.getValidDirections(board_, currentPlayer_);
+        if (input_.hasSelection()) {
+            validDirections_ = input_.getValidDirections(board_, currentPlayer_);
 
-                    if (!validDirections_.empty()) {
-                        showWheel_ = true;
-                        wheelCenter_ = input_.getSelectedMarbles()[0];
-                    }
-                }
+            if (!validDirections_.empty()) {
+                showWheel_ = true;
+                wheelCenter_ = input_.getSelectedMarbles()[0];
+            } else {
+                // Invalid selection, clear it
+                input_.clearSelection();
             }
         }
     }
@@ -150,6 +163,7 @@ void Game::reset() {
     showWheel_ = false;
     moveCount_ = 0;
     gameOver_ = false;
+    isDragging_ = false;
     std::cout << "\n=== GAME RESET ===" << std::endl;
 }
 
@@ -164,8 +178,8 @@ void Game::drawUI() {
     DrawText(TextFormat("White: %d (%d ejected)",
              board_.countMarbles(Player::White), board_.whiteEjected()), 10, 130, 18, DARKGRAY);
 
-    DrawText("Click marble to select", 10, 180, 16, DARKGRAY);
-    DrawText("SHIFT+Click for multi-select", 10, 200, 16, DARKGRAY);
+    DrawText("Click/Drag to select marbles", 10, 180, 16, DARKGRAY);
+    DrawText("Right-click: Clear selection", 10, 200, 16, DARKGRAY);
     DrawText("R: Reset", 10, 220, 16, DARKGRAY);
     DrawText("LEFT/RIGHT: Rotate camera horizontally", 10, 240, 16, DARKGRAY);
     DrawText("UP/DOWN: Rotate camera vertically", 10, 260, 16, DARKGRAY);
@@ -173,39 +187,39 @@ void Game::drawUI() {
 
 void Game::drawGameOverScreen() {
     DrawRectangle(0, 0, 1400, 900, {0, 0, 0, 180});
-    
+
     Player winner = Game_Rules::getWinner(board_);
-    
+
     int screenWidth = GetScreenWidth();
     int screenHeight = GetScreenHeight();
     int centerX = screenWidth / 2;
     int centerY = screenHeight / 2;
-    
+
     int panelWidth = 600;
     int panelHeight = 300;
     int panelX = centerX - panelWidth / 2;
     int panelY = centerY - panelHeight / 2;
-    
+
     DrawRectangle(panelX, panelY, panelWidth, panelHeight, {139, 90, 43, 255});
     DrawRectangle(panelX + 10, panelY + 10, panelWidth - 20, panelHeight - 20, {101, 67, 33, 255});
     DrawRectangle(panelX + 15, panelY + 15, panelWidth - 30, panelHeight - 30, {120, 81, 45, 255});
-    
+
     const char* gameOverText = "GAME OVER!";
     int gameOverWidth = MeasureText(gameOverText, 60);
     DrawText(gameOverText, centerX - gameOverWidth / 2 + 3, centerY - 100 + 3, 60, {0, 0, 0, 100});
     DrawText(gameOverText, centerX - gameOverWidth / 2, centerY - 100, 60, {220, 50, 50, 255});
-    
+
     const char* winnerLabel = "Winner:";
     int winnerLabelWidth = MeasureText(winnerLabel, 40);
     DrawText(winnerLabel, centerX - winnerLabelWidth / 2 + 2, centerY - 20 + 2, 40, {0, 0, 0, 100});
     DrawText(winnerLabel, centerX - winnerLabelWidth / 2, centerY - 20, 40, {50, 200, 50, 255});
-    
+
     const char* winnerName = winner == Player::Black ? "BLACK" : "WHITE";
     Color winnerColor = winner == Player::Black ? BLACK : Color{240, 240, 240, 255};
     int winnerNameWidth = MeasureText(winnerName, 48);
     DrawText(winnerName, centerX - winnerNameWidth / 2 + 2, centerY + 30 + 2, 48, {0, 0, 0, 120});
     DrawText(winnerName, centerX - winnerNameWidth / 2, centerY + 30, 48, winnerColor);
-    
+
     const char* restartText = "Press R to restart";
     int restartWidth = MeasureText(restartText, 28);
     DrawText(restartText, centerX - restartWidth / 2 + 2, centerY + 100 + 2, 28, {0, 0, 0, 100});

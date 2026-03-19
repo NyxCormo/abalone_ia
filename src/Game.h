@@ -32,6 +32,9 @@ private:
 
     int moveCount_;
     bool gameOver_;
+
+    // Drag selection state
+    bool isDragging_;
 };
 
 #endif //ABALONE_GAME_H

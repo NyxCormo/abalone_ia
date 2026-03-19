@@ -25,26 +25,24 @@ void InputHandler::addToSelection(Position pos, Player player, const Board& boar
     
     auto it = std::find(selectedMarbles_.begin(), selectedMarbles_.end(), pos);
     if(it != selectedMarbles_.end()) {
-        selectedMarbles_.erase(it);
         return;
     }
-    
+
     if(selectedMarbles_.size() >= 3) return;
-    
-    bool isAdjacent = false;
-    for(const auto& selected : selectedMarbles_) {
-        if(areAdjacent(selected, pos)) {
-            isAdjacent = true;
-            break;
-        }
+
+    std::vector<Position> testGroup = selectedMarbles_;
+    testGroup.push_back(pos);
+
+    if(isValidGroup(testGroup)) {
+        selectedMarbles_.push_back(pos);
     }
-    
-    if(!isAdjacent) return;
-    
-    selectedMarbles_.push_back(pos);
-    
-    if(!areAligned()) {
-        selectedMarbles_.pop_back();
+}
+
+void InputHandler::removeFromSelection(Position pos)
+{
+    auto it = std::find(selectedMarbles_.begin(), selectedMarbles_.end(), pos);
+    if(it != selectedMarbles_.end()) {
+        selectedMarbles_.erase(it);
     }
 }
 
@@ -66,9 +64,9 @@ const std::vector<Position>& InputHandler::getSelectedMarbles() const
 std::vector<Direction> InputHandler::getValidDirections(const Board& board, Player player) const
 {
     std::vector<Direction> validDirs;
-    
+
     if(selectedMarbles_.empty()) return validDirs;
-    
+
     for(Direction dir : ALL_DIRECTIONS)
     {
         Move move(selectedMarbles_, dir);
@@ -76,20 +74,20 @@ std::vector<Direction> InputHandler::getValidDirections(const Board& board, Play
             validDirs.push_back(dir);
         }
     }
-    
+
     return validDirs;
 }
 
 std::optional<Move> InputHandler::tryCreateMove(Direction dir, const Board& board, Player player) const
 {
     if(selectedMarbles_.empty()) return std::nullopt;
-    
+
     Move move(selectedMarbles_, dir);
-    
+
     if(MoveGenerator::isLegalMove(board, player, move)) {
         return move;
     }
-    
+
     return std::nullopt;
 }
 
@@ -100,31 +98,34 @@ bool InputHandler::areAdjacent(const Position& a, const Position& b) {
 bool InputHandler::areAligned() const
 {
     if(selectedMarbles_.size() <= 2) return true;
-    
-    for(Direction dir : ALL_DIRECTIONS)
-    {
-        bool aligned = true;
-        
-        for(size_t i = 0; i < selectedMarbles_.size() - 1; i++)
-        {
-            Position expected = selectedMarbles_[i].neighbor(dir);
-            
-            bool found = false;
-            for(size_t j = i + 1; j < selectedMarbles_.size(); j++)
-            {
-                if(selectedMarbles_[j] == expected) {
-                    found = true;
-                    break;
-                }
+    return isValidGroup(selectedMarbles_);
+}
+
+bool InputHandler::isValidGroup(const std::vector<Position>& group) const {
+    if(group.empty() || group.size() > 3) return false;
+    if(group.size() == 1) return true;
+
+    if(group.size() == 2) {
+        return areAdjacent(group[0], group[1]);}
+
+    for(Direction dir : ALL_DIRECTIONS) {
+        for(size_t startIdx = 0; startIdx < 3; startIdx++) {
+            Position start = group[startIdx];
+            Position next1 = start.neighbor(dir);
+            Position next2 = next1.neighbor(dir);
+            bool foundNext1 = false;
+            bool foundNext2 = false;
+
+            for(size_t i = 0; i < 3; i++) {
+                if(i == startIdx) continue;
+                if(group[i] == next1) foundNext1 = true;
+                if(group[i] == next2) foundNext2 = true;
             }
-            
-            if(!found) {
-                aligned = false;
-                break;
+
+            if(foundNext1 && foundNext2) {
+                return true;
             }
         }
-        
-        if(aligned) return true;
     }
     
     return false;
