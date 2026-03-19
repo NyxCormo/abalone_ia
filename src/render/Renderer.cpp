@@ -75,22 +75,34 @@ bool Renderer::isPointInHex(Vector2 point, Vector2 hexCenter, float radius) {
 }
 
 void Renderer::draw(const Board& board) {
-    constexpr float CAMERA_DISTANCE = 0.5;
-    constexpr float CAMERA_HEIGHT = 20.0f;
+    constexpr float CAMERA_DISTANCE = 20.0f;
     constexpr float CAMERA_ANGLE_SPEED = 0.6f;
 
-    static float cameraAngle = 0.0f;
+    static float cameraAngleH = 0.0f;
+    static float cameraAngleV = 0.7f;
 
     if (IsKeyDown(KEY_LEFT)) {
-        cameraAngle += CAMERA_ANGLE_SPEED * GetFrameTime();
+        cameraAngleH += CAMERA_ANGLE_SPEED * GetFrameTime();
     }
     if (IsKeyDown(KEY_RIGHT)) {
-        cameraAngle -= CAMERA_ANGLE_SPEED * GetFrameTime();
+        cameraAngleH -= CAMERA_ANGLE_SPEED * GetFrameTime();
     }
 
-    camera.position.x = CAMERA_DISTANCE * std::sin(cameraAngle);
-    camera.position.y = CAMERA_HEIGHT;
-    camera.position.z = CAMERA_DISTANCE * std::cos(cameraAngle);
+    if (IsKeyDown(KEY_DOWN)) {
+        cameraAngleV += CAMERA_ANGLE_SPEED * GetFrameTime();
+    }
+    if (IsKeyDown(KEY_UP)) {
+        cameraAngleV -= CAMERA_ANGLE_SPEED * GetFrameTime();
+    }
+
+    constexpr float MIN_VERTICAL = 0.1f;
+    constexpr float MAX_VERTICAL = 3.04f;
+    if (cameraAngleV < MIN_VERTICAL) cameraAngleV = MIN_VERTICAL;
+    if (cameraAngleV > MAX_VERTICAL) cameraAngleV = MAX_VERTICAL;
+
+    camera.position.x = CAMERA_DISTANCE * std::sin(cameraAngleV) * std::sin(cameraAngleH);
+    camera.position.y = CAMERA_DISTANCE * std::cos(cameraAngleV);
+    camera.position.z = CAMERA_DISTANCE * std::sin(cameraAngleV) * std::cos(cameraAngleH);
 
     camera.target = {0.0f, 0.0f, 0.0f};
 
