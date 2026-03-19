@@ -21,12 +21,17 @@ set(CORE_SOURCES
         src/core/MoveGenerator.cpp
         src/core/Game_Rules.cpp
         src/core/InputHandler.cpp
+        src/core/GameState.h
+        src/core/GameEngine.cpp
+        src/core/GameEngine.h
 )
 
 set(RENDER_SOURCES
         src/render/Renderer.cpp
         src/render/MeshGenerator.cpp
         src/render/MeshGenerator.h
+        src/render/UI.cpp
+        src/render/UI.h
 )
 
 add_executable(Abalone

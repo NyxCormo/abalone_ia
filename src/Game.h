@@ -3,10 +3,11 @@
 
 #include <memory>
 
-#include "core/Board.h"
 #include "core/InputHandler.h"
 #include "render/Renderer.h"
 #include <vector>
+
+#include "core/GameState.h"
 
 class Game {
 public:
@@ -16,24 +17,19 @@ public:
 private:
     void handleInput();
     void update();
-    void render();
+    void render() const;
     void reset();
-    void drawUI();
-    void drawGameOverScreen();
 
-    Board board_;
     std::unique_ptr<Renderer> renderer_;
     InputHandler input_;
 
-    Player currentPlayer_;
     bool showWheel_;
     Position wheelCenter_;
     std::vector<Direction> validDirections_;
 
-    int moveCount_;
+    GameState state_;
     bool gameOver_;
 
-    // Drag selection state
     bool isDragging_;
 };
 
