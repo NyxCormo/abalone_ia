@@ -33,6 +33,8 @@ add_executable(Abalone
         src/main.cpp
         ${CORE_SOURCES}
         ${RENDER_SOURCES}
+        src/Game.cpp
+        src/Game.h
 )
 
 target_include_directories(Abalone PRIVATE src)
