@@ -14,11 +14,12 @@ public:
 
     Renderer();
     ~Renderer();
-    void draw(const Board& board);
+
     [[nodiscard]] std::optional<Position> getClickedHex(Vector2 mousePos) const;
-    void drawSelectionWheel(Position center, const std::vector<Direction>& directions) const;
     [[nodiscard]] std::optional<Direction> getClickedDirection(Position hexPos, Vector2 mousePos) const;
 
+    void draw(const Board& board);
+    void drawSelectionWheel(Position center, const std::vector<Direction>& directions) const;
     void drawGlobalDirectionRose() const;
 
 private:

@@ -25,6 +25,8 @@ set(CORE_SOURCES
 
 set(RENDER_SOURCES
         src/render/Renderer.cpp
+        src/render/MeshGenerator.cpp
+        src/render/MeshGenerator.h
 )
 
 add_executable(Abalone

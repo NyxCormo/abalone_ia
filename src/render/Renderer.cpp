@@ -1,6 +1,8 @@
 #include "Renderer.h"
 #include <cmath>
 
+#include "MeshGenerator.h"
+
 Renderer::Renderer()
     : camera{},
       boardModel{},
@@ -23,15 +25,12 @@ Renderer::Renderer()
     hexWood = LoadTexture("../assets/textures/hexWood.png");
     tableTexture = LoadTexture("../assets/textures/tableTexture.png");
 
-    float plateauRadius = 10.0f;
-    float plateauHeight = 0.2f;
-
-    Mesh baseMesh = GenMeshCylinder(plateauRadius, plateauHeight, 50);
+    Mesh baseMesh = GenMeshCylinderWithUVs(10.0f, 0.2f, 50);
     boardModel = LoadModelFromMesh(baseMesh);
     boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
     boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = tableTexture;
 
-    Mesh hexMesh = GenMeshCylinder(1.0f, 0.2f, 6);
+    Mesh hexMesh = GenMeshCylinderWithUVs(1.0f, 0.2f, 6);
     hexModel = LoadModelFromMesh(hexMesh);
     hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
     hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = hexWood;
@@ -48,25 +47,20 @@ Renderer::Renderer()
 }
 
 Renderer::~Renderer() {
-    UnloadTexture(whiteMarbleTex);
-    UnloadTexture(blackMarbleTex);
-    UnloadTexture(hexWood);
-    UnloadTexture(tableTexture);
-
     UnloadModel(boardModel);
     UnloadModel(hexModel);
     UnloadModel(marbleWhite);
     UnloadModel(marbleBlack);
+    UnloadTexture(whiteMarbleTex);
+    UnloadTexture(blackMarbleTex);
+    UnloadTexture(hexWood);
+    UnloadTexture(tableTexture);
 }
 
 Vector3 Renderer::hexToWorld(int q, int r) {
-    float size = 1.2f;
-
-    float x = size * std::sqrt(3.0f) *
-          (static_cast<float>(q) + static_cast<float>(r) * 0.5f);
-
-    float z = size * 1.5f * static_cast<float>(r);
-
+    constexpr float HEX_SIZE = 1.2f;
+    float x = HEX_SIZE * std::sqrt(3.0f) * (static_cast<float>(q) + static_cast<float>(r)/2.0f);
+    float z = HEX_SIZE * 1.5f * static_cast<float>(r);
     return {x, 0.0f, z};
 }
 
@@ -74,46 +68,61 @@ Vector2 Renderer::worldToScreen(Vector3 worldPos, const Camera3D &cam) {
     return GetWorldToScreen(worldPos, cam);
 }
 
-bool Renderer::isPointInHex(Vector2 point, Vector2 hexCenter, float radius)  {
+bool Renderer::isPointInHex(Vector2 point, Vector2 hexCenter, float radius) {
     float dx = point.x - hexCenter.x;
     float dy = point.y - hexCenter.y;
-    float dist = std::sqrt(dx*dx + dy*dy);
-
-    return dist <= radius;
+    return (dx*dx + dy*dy) <= (radius * radius);
 }
 
 void Renderer::draw(const Board& board) {
-    camera.position = {1.0f, 25.0f, 0.0f};
+    constexpr float CAMERA_DISTANCE = 0.5;
+    constexpr float CAMERA_HEIGHT = 20.0f;
+    constexpr float CAMERA_ANGLE_SPEED = 0.6f;
+
+    static float cameraAngle = 0.0f;
+
+    if (IsKeyDown(KEY_LEFT)) {
+        cameraAngle += CAMERA_ANGLE_SPEED * GetFrameTime();
+    }
+    if (IsKeyDown(KEY_RIGHT)) {
+        cameraAngle -= CAMERA_ANGLE_SPEED * GetFrameTime();
+    }
+
+    camera.position.x = CAMERA_DISTANCE * std::sin(cameraAngle);
+    camera.position.y = CAMERA_HEIGHT;
+    camera.position.z = CAMERA_DISTANCE * std::cos(cameraAngle);
+
     camera.target = {0.0f, 0.0f, 0.0f};
 
     BeginMode3D(camera);
 
-    DrawPlane({0.0f, 0.0f, 0.0f}, {40.0f, 40.0f}, {90, 60, 40, 255});
     DrawModel(boardModel, {0.0f, -0.1f, 0.0f}, 1.0f, WHITE);
 
     for(int q = -4; q <= 4; q++) {
         for(int r = -4; r <= 4; r++) {
-            Position p(q, r);
-            if(!p.isValid()) continue;
+            Position pos(q, r);
+            if(!pos.isValid()) continue;
 
-            Vector3 pos = hexToWorld(q, r);
+            Vector3 worldPos = hexToWorld(q, r);
+            DrawModel(hexModel, worldPos, 1.0f, {200, 180, 140, 255});
+        }
+    }
 
-            DrawModel(hexModel, pos, 1.0f, {150, 100, 50, 255});
+    for(int q = -4; q <= 4; q++) {
+        for(int r = -4; r <= 4; r++) {
+            Position pos(q, r);
+            if(!pos.isValid()) continue;
 
-            Cell marble = board.get(p);
+            Cell cell = board.get(pos);
+            if(cell == Cell::Empty) continue;
 
-            if(marble == Cell::White) {
-                Vector3 marblePos = pos;
-                marblePos.y = 0.6f;
+            Vector3 worldPos = hexToWorld(q, r);
+            worldPos.y = 0.6f;
 
-                DrawModel(marbleWhite, marblePos, 1.0f, WHITE);
-            }
-
-            if(marble == Cell::Black) {
-                Vector3 marblePos = pos;
-                marblePos.y = 0.6f;
-
-                DrawModel(marbleBlack, marblePos, 1.0f, {30, 30, 30, 255});
+            if(cell == Cell::Black) {
+                DrawModel(marbleBlack, worldPos, 1.0f, WHITE);
+            } else if(cell == Cell::White) {
+                DrawModel(marbleWhite, worldPos, 1.0f, WHITE);
             }
         }
     }
