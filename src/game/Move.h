@@ -1,8 +1,8 @@
 #ifndef ABALONE_MOVE_H
 #define ABALONE_MOVE_H
 
-#include "Position.h"
-#include "Direction.h"
+#include "../geometry/Position.h"
+#include "../geometry/Direction.h"
 #include <vector>
 #include <string>
 

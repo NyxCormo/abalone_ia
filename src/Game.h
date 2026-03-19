@@ -3,11 +3,11 @@
 
 #include <memory>
 
-#include "core/InputHandler.h"
+#include "game/InputHandler.h"
 #include "render/Renderer.h"
 #include <vector>
 
-#include "core/GameState.h"
+#include "game/GameState.h"
 
 class Game {
 public:

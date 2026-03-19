@@ -4,7 +4,7 @@
 
 #include "Board.h"
 #include "Move.h"
-#include "Position.h"
+#include "../geometry/Position.h"
 
 
 class MoveGenerator {

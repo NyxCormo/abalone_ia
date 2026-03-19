@@ -2,8 +2,7 @@
 #define ABALONE_INPUTHANDLER_H
 
 #include "Board.h"
-#include "Position.h"
-#include "Direction.h"
+#include "../geometry/Position.h"
 #include "Move.h"
 #include <vector>
 #include <optional>

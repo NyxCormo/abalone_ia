@@ -7,7 +7,7 @@
 
 #include <cmath>
 #include <iostream>
-#include "Direction.h"
+#include "../geometry/Direction.h"
 
 
 class Position {

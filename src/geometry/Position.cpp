@@ -2,7 +2,7 @@
 // Created by nyx on 3/13/26.
 //
 
-#include "Position.h"
+#include "../geometry/Position.h"
 
 #include <iosfwd>
 

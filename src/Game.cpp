@@ -2,7 +2,7 @@
 #include <raylib.h>
 #include <iostream>
 
-#include "core/GameEngine.h"
+#include "game/GameEngine.h"
 #include "render/UI.h"
 
 Game::Game()
@@ -19,7 +19,7 @@ Game::Game()
 }
 
 void Game::run() {
-    InitWindow(1400, 900, "Abalone 3D - Interactive");
+    InitWindow(1400, 900, "Abalone");
     SetTargetFPS(60);
 
     renderer_ = std::make_unique<Renderer>();

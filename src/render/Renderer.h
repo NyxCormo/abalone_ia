@@ -1,8 +1,8 @@
 #pragma once
 
 #include "raylib.h"
-#include "../core/Board.h"
-#include "../core/Position.h"
+#include "../game/Board.h"
+#include "../geometry/Position.h"
 #include <vector>
 #include <optional>
 

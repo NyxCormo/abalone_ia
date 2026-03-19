@@ -2,10 +2,10 @@
 
 #include <raylib.h>
 
-#include "core/GameEngine.h"
+#include "game/GameEngine.h"
 
 void UI::drawHUD(const GameState& state) {
-    DrawText("ABALONE 3D - INTERACTIVE", 10, 10, 24, BLACK);
+    DrawText("ABALONE", 10, 10, 24, BLACK);
     DrawText(TextFormat("Move: %d", state.moveCount), 10, 45, 20, DARKGRAY);
     DrawText(TextFormat("Current Player: %s",
              state.currentPlayer == Player::Black ? "BLACK" : "WHITE"), 10, 75, 20,

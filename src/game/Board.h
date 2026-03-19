@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "Position.h"
+#include "../geometry/Position.h"
 
 enum class Cell {
     Empty,

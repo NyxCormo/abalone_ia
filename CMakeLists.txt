@@ -15,15 +15,15 @@ if (NOT raylib_FOUND)
 endif()
 
 set(CORE_SOURCES
-        src/core/Position.cpp
-        src/core/Board.cpp
-        src/core/Move.cpp
-        src/core/MoveGenerator.cpp
-        src/core/Game_Rules.cpp
-        src/core/InputHandler.cpp
-        src/core/GameState.h
-        src/core/GameEngine.cpp
-        src/core/GameEngine.h
+        src/geometry/Position.cpp
+        src/game/Board.cpp
+        src/game/Move.cpp
+        src/game/MoveGenerator.cpp
+        src/game/Game_Rules.cpp
+        src/game/InputHandler.cpp
+        src/game/GameState.h
+        src/game/GameEngine.cpp
+        src/game/GameEngine.h
 )
 
 set(RENDER_SOURCES
