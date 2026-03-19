@@ -8,6 +8,10 @@ Board::Board() : cells_{}, black_count_(0), white_count_(0), black_ejected_(0), 
 }
 
 void Board::setup() {
+    for (auto& row : cells_) {
+        row.fill(Cell::Empty);
+    }
+
     set(Position(-4, 4), Cell::Black);
     set(Position(-3, 4), Cell::Black);
     set(Position(-2, 4), Cell::Black);
