@@ -9,13 +9,53 @@ Move::Move(const Position &marble, Direction dir)
 Move::Move(const std::vector<Position>& marbles, Direction dir)
     : marbles_(marbles), direction_(dir) {
 
-    std::sort(marbles_.begin(), marbles_.end(),
-              [](const Position& a, const Position& b) {
-                  if (a.q() != b.q()) return a.q() < b.q();
-                  return a.r() < b.r();
-              });
-
     moveType_ = detectMoveType();
+
+    if (moveType_ == MoveType::INLINE) {
+        sortMarblesInDirection(dir);
+    } else {
+        std::sort(marbles_.begin(), marbles_.end(),
+                  [](const Position& a, const Position& b) {
+                      if (a.q() != b.q()) return a.q() < b.q();
+                      return a.r() < b.r();
+                  });
+    }
+}
+
+void Move::sortMarblesInDirection(Direction dir) {
+    std::sort(marbles_.begin(), marbles_.end(),
+              [dir](const Position& a, const Position& b) {
+                  int proj_a = 0, proj_b = 0;
+
+                  switch(dir) {
+                      case Direction::EAST:
+                          proj_a = a.q();
+                          proj_b = b.q();
+                          break;
+                      case Direction::WEST:
+                          proj_a = -a.q();
+                          proj_b = -b.q();
+                          break;
+                      case Direction::NORTH_EAST:
+                          proj_a = a.q() - a.r();
+                          proj_b = b.q() - b.r();
+                          break;
+                      case Direction::SOUTH_WEST:
+                          proj_a = -(a.q() - a.r());
+                          proj_b = -(b.q() - b.r());
+                          break;
+                      case Direction::NORTH_WEST:
+                          proj_a = -a.r();
+                          proj_b = -b.r();
+                          break;
+                      case Direction::SOUTH_EAST:
+                          proj_a = a.r();
+                          proj_b = b.r();
+                          break;
+                  }
+
+                  return proj_a < proj_b;
+              });
 }
 
 MoveType Move::detectMoveType() const {
@@ -23,35 +63,81 @@ MoveType Move::detectMoveType() const {
         return MoveType::INLINE;
     }
 
-    if (areAligned(direction_)) {
-        return MoveType::INLINE;
-    }
+    Direction alignmentDir = findAlignmentDirection();
 
-    return MoveType::SIDESTEP;
+    if (alignmentDir == direction_ || alignmentDir == opposite(direction_)) {
+        return MoveType::INLINE;
+    } else {
+        return MoveType::SIDESTEP;
+    }
 }
 
-bool Move::areAligned(Direction dir) const {
+Direction Move::findAlignmentDirection() const {
+    if (marbles_.size() < 2) {
+        return direction_;
+    }
+
+    for (Direction testDir : ALL_DIRECTIONS) {
+        if (areAlignedInDirection(testDir)) {
+            return testDir;
+        }
+    }
+
+    return direction_;
+}
+
+bool Move::areAlignedInDirection(Direction dir) const {
     if (marbles_.size() < 2) {
         return true;
     }
 
-    for (size_t i = 0; i < marbles_.size() - 1; i++) {
-        Position expected = marbles_[i].neighbor(dir);
+    std::vector<Position> sorted = marbles_;
+    std::sort(sorted.begin(), sorted.end(),
+              [dir](const Position& a, const Position& b) {
+                  int proj_a = 0, proj_b = 0;
 
-        bool found = false;
-        for (size_t j = i + 1; j < marbles_.size(); j++) {
-            if (marbles_[j] == expected) {
-                found = true;
-                break;
-            }
-        }
+                  switch(dir) {
+                      case Direction::EAST:
+                          proj_a = a.q();
+                          proj_b = b.q();
+                          break;
+                      case Direction::WEST:
+                          proj_a = -a.q();
+                          proj_b = -b.q();
+                          break;
+                      case Direction::NORTH_EAST:
+                          proj_a = a.q() - a.r();
+                          proj_b = b.q() - b.r();
+                          break;
+                      case Direction::SOUTH_WEST:
+                          proj_a = -(a.q() - a.r());
+                          proj_b = -(b.q() - b.r());
+                          break;
+                      case Direction::NORTH_WEST:
+                          proj_a = -a.r();
+                          proj_b = -b.r();
+                          break;
+                      case Direction::SOUTH_EAST:
+                          proj_a = a.r();
+                          proj_b = b.r();
+                          break;
+                  }
 
-        if (!found) {
+                  return proj_a < proj_b;
+              });
+
+    for (size_t i = 0; i < sorted.size() - 1; i++) {
+        Position expected = sorted[i].neighbor(dir);
+        if (expected != sorted[i + 1]) {
             return false;
         }
     }
 
     return true;
+}
+
+bool Move::areAligned(Direction dir) const {
+    return areAlignedInDirection(dir);
 }
 
 std::vector<Position> Move::destinations() const {

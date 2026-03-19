@@ -18,22 +18,16 @@ Player Game_Rules::getWinner(const Board& board) {
 }
 
 Position Game_Rules::findFrontMarble(const std::vector<Position>& marbles, Direction dir) {
-    for (const Position& marble : marbles) {
-        Position behind = marble.neighbor(opposite(dir));
-        bool isBehind = std::find(marbles.begin(), marbles.end(), behind) != marbles.end();
-
-        if (!isBehind) {
-            return marble;
-        }
-    }
-    return marbles[0];
+    return marbles.back();
 }
 
 void Game_Rules::applyInlineMove(Board& board, const Move& move, Player player) {
     Direction dir = move.direction();
     const auto& marbles = move.marbles();
 
-    Position front = findFrontMarble(marbles, dir);
+    Position front = marbles.back();
+    Position back = marbles.front();
+
     Cell ourCell = playerToCell(player);
     Position target = front.neighbor(dir);
 
@@ -71,7 +65,7 @@ void Game_Rules::applyInlineMove(Board& board, const Move& move, Player player) 
         }
 
         if (!opponentMarbles.empty()) {
-            board.set(opponentMarbles[0], playerToCell(opponent(player)));
+            board.set(opponentMarbles[0], ourCell);
         }
     } else {
         Cell lastOpponentCell = board.get(opponentMarbles.back());
@@ -81,26 +75,16 @@ void Game_Rules::applyInlineMove(Board& board, const Move& move, Player player) 
             Cell cell = board.get(opponentMarbles[i]);
             board.set(opponentMarbles[i+1], cell);
         }
+
+        board.set(target, ourCell);
     }
 
-    board.set(target, ourCell);
-
-    for (const Position& marble : marbles) {
-        if (marble != front) {
-            Position pos = marble.neighbor(dir);
-            board.set(pos, ourCell);
-        }
+    for (size_t i = 0; i < marbles.size() - 1; i++) {
+        Position pos = marbles[i].neighbor(dir);
+        board.set(pos, ourCell);
     }
 
-    for (const Position& marble : marbles) {
-        Position behind = marble.neighbor(opposite(dir));
-        bool hasBehind = std::find(marbles.begin(), marbles.end(), behind) != marbles.end();
-
-        if (!hasBehind) {
-            board.set(marble, Cell::Empty);
-            break;
-        }
-    }
+    board.set(back, Cell::Empty);
 }
 
 void Game_Rules::applySideStepMove(Board& board, const Move& move, Player player) {

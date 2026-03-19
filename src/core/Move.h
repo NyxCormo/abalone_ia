@@ -13,11 +13,13 @@ enum class MoveType {
 
 class Move {
 private:
+
     std::vector<Position> marbles_;
     Direction direction_;
     MoveType moveType_;
 
 public:
+
     Move(const Position& marble, Direction dir);
     Move(const std::vector<Position>& marbles, Direction dir);
 
@@ -39,8 +41,12 @@ public:
     bool operator!=(const Move& other) const { return !(*this == other); }
 
 private:
+
     [[nodiscard]] MoveType detectMoveType() const;
+    [[nodiscard]] Direction findAlignmentDirection() const;
     [[nodiscard]] bool areAligned(Direction dir) const;
+    [[nodiscard]] bool areAlignedInDirection(Direction dir) const;
+    void sortMarblesInDirection(Direction dir);
 };
 
 #endif

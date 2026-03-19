@@ -118,16 +118,7 @@ bool MoveGenerator::isLegalInlineMove(const Board& board, Player player, const M
     Direction dir = move.direction();
     const auto& marbles = move.marbles();
 
-    Position front = marbles[0];
-    for (const Position& marble : marbles) {
-        Position behind = marble.neighbor(opposite(dir));
-        bool isBehind = std::find(marbles.begin(), marbles.end(), behind) != marbles.end();
-
-        if (!isBehind) {
-            front = marble;
-            break;
-        }
-    }
+    Position front = marbles.back();
 
     Position target = front.neighbor(dir);
 
@@ -186,16 +177,7 @@ int MoveGenerator::countPushedMarbles(const Board &board, Player player, const M
     Direction dir = move.direction();
     const auto& marbles = move.marbles();
 
-    Position front = marbles[0];
-    for (const Position& marble : marbles) {
-        Position behind = marble.neighbor(opposite(dir));
-        bool isBehind = std::find(marbles.begin(), marbles.end(), behind) != marbles.end();
-
-        if (!isBehind) {
-            front = marble;
-            break;
-        }
-    }
+    Position front = marbles.back();
 
     Position target = front.neighbor(dir);
     int count = 0;
