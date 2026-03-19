@@ -19,6 +19,8 @@ public:
     void drawSelectionWheel(Position center, const std::vector<Direction>& directions) const;
     [[nodiscard]] std::optional<Direction> getClickedDirection(Position hexPos, Vector2 mousePos) const;
 
+    void drawGlobalDirectionRose() const;
+
 private:
 
     Model boardModel;
@@ -29,7 +31,7 @@ private:
     Texture2D whiteMarbleTex;
     Texture2D blackMarbleTex;
     Texture2D hexWood;
-    Texture2D tableWood;
+    Texture2D tableTexture;
 
     static Vector3 hexToWorld(int q, int r);
     static Vector2 worldToScreen(Vector3 worldPos, const Camera3D &cam);

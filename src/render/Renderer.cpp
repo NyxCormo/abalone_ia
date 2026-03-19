@@ -10,9 +10,9 @@ Renderer::Renderer()
       whiteMarbleTex{},
       blackMarbleTex{},
       hexWood{},
-      tableWood{}
+      tableTexture{}
 {
-    camera.position = {10.0f, 12.0f, 10.0f};
+    camera.position = {0.0f, 0.0f, 0.0f};
     camera.target = {0.0f, 0.0f, 0.0f};
     camera.up = {0.0f, 1.0f, 0.0f};
     camera.fovy = 45.0f;
@@ -21,19 +21,19 @@ Renderer::Renderer()
     whiteMarbleTex = LoadTexture("../assets/textures/whiteMarble.png");
     blackMarbleTex = LoadTexture("../assets/textures/blackMarble.png");
     hexWood = LoadTexture("../assets/textures/hexWood.png");
-    tableWood = LoadTexture("../assets/textures/tableWood.png");
+    tableTexture = LoadTexture("../assets/textures/tableTexture.png");
 
     float plateauRadius = 10.0f;
     float plateauHeight = 0.2f;
 
     Mesh baseMesh = GenMeshCylinder(plateauRadius, plateauHeight, 50);
     boardModel = LoadModelFromMesh(baseMesh);
-    boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = {120, 80, 40, 255};
-    boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = tableWood;
+    boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
+    boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = tableTexture;
 
     Mesh hexMesh = GenMeshCylinder(1.0f, 0.2f, 6);
     hexModel = LoadModelFromMesh(hexMesh);
-    hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = {120, 80, 40, 255};
+    hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
     hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = hexWood;
 
     Mesh marbleMesh = GenMeshSphere(0.5f, 32, 32);
@@ -51,7 +51,7 @@ Renderer::~Renderer() {
     UnloadTexture(whiteMarbleTex);
     UnloadTexture(blackMarbleTex);
     UnloadTexture(hexWood);
-    UnloadTexture(tableWood);
+    UnloadTexture(tableTexture);
 
     UnloadModel(boardModel);
     UnloadModel(hexModel);
@@ -83,7 +83,7 @@ bool Renderer::isPointInHex(Vector2 point, Vector2 hexCenter, float radius)  {
 }
 
 void Renderer::draw(const Board& board) {
-    camera.position = {0.0f, 20.0f, -10.0f};
+    camera.position = {1.0f, 25.0f, 0.0f};
     camera.target = {0.0f, 0.0f, 0.0f};
 
     BeginMode3D(camera);
@@ -119,6 +119,8 @@ void Renderer::draw(const Board& board) {
     }
 
     EndMode3D();
+
+    drawGlobalDirectionRose();
 }
 
 std::optional<Position> Renderer::getClickedHex(Vector2 mousePos) const {
@@ -170,7 +172,30 @@ void Renderer::drawSelectionWheel(Position center, const std::vector<Direction>&
     );
 
     for(Direction dir : directions) {
-        float angle = static_cast<float>(dir) * 60.0f * DEG2RAD;
+        int dq = 0, dr = 0;
+        switch(dir) {
+            case Direction::EAST:       dq = 1; dr = 0; break;
+            case Direction::NORTH_EAST: dq = 1; dr = -1; break;
+            case Direction::NORTH_WEST: dq = 0; dr = -1; break;
+            case Direction::WEST:       dq = -1; dr = 0; break;
+            case Direction::SOUTH_WEST: dq = -1; dr = 1; break;
+            case Direction::SOUTH_EAST: dq = 0; dr = 1; break;
+        }
+
+        Vector3 neighbor = hexToWorld(center.q() + dq, center.r() + dr);
+        Vector3 worldDir;
+        worldDir.x = neighbor.x - worldPos.x;
+        worldDir.y = neighbor.y - worldPos.y;
+        worldDir.z = neighbor.z - worldPos.z;
+
+        Vector3 worldTarget;
+        worldTarget.x = worldPos.x + worldDir.x;
+        worldTarget.y = worldPos.y + worldDir.y;
+        worldTarget.z = worldPos.z + worldDir.z;
+
+        Vector2 screenDir = worldToScreen(worldTarget, camera);
+        float angle = std::atan2(screenDir.y - screenPos.y, screenDir.x - screenPos.x);
+
         float buttonX = screenPos.x + std::cos(angle) * (wheelRadius - 20.0f);
         float buttonY = screenPos.y + std::sin(angle) * (wheelRadius - 20.0f);
 
@@ -189,7 +214,6 @@ void Renderer::drawSelectionWheel(Position center, const std::vector<Direction>&
         );
 
         const char* label = "";
-
         switch(dir) {
             case Direction::EAST: label = "E"; break;
             case Direction::NORTH_EAST: label = "NE"; break;
@@ -219,14 +243,35 @@ std::optional<Direction> Renderer::getClickedDirection(Position hexPos, Vector2 
         float wheelRadius = 80.0f;
         auto dir = static_cast<Direction>(i);
 
-        float angle = static_cast<float>(i) * 60.0f * DEG2RAD;
+        int dq = 0, dr = 0;
+        switch(dir) {
+            case Direction::EAST:       dq = 1; dr = 0; break;
+            case Direction::NORTH_EAST: dq = 1; dr = -1; break;
+            case Direction::NORTH_WEST: dq = 0; dr = -1; break;
+            case Direction::WEST:       dq = -1; dr = 0; break;
+            case Direction::SOUTH_WEST: dq = -1; dr = 1; break;
+            case Direction::SOUTH_EAST: dq = 0; dr = 1; break;
+        }
+
+        Vector3 neighbor = hexToWorld(hexPos.q() + dq, hexPos.r() + dr);
+        Vector3 worldDir;
+        worldDir.x = neighbor.x - worldPos.x;
+        worldDir.y = neighbor.y - worldPos.y;
+        worldDir.z = neighbor.z - worldPos.z;
+
+        Vector3 worldTarget;
+        worldTarget.x = worldPos.x + worldDir.x;
+        worldTarget.y = worldPos.y + worldDir.y;
+        worldTarget.z = worldPos.z + worldDir.z;
+
+        Vector2 screenDir = worldToScreen(worldTarget, camera);
+        float angle = std::atan2(screenDir.y - screenPos.y, screenDir.x - screenPos.x);
 
         float buttonX = screenPos.x + std::cos(angle) * (wheelRadius - 20.0f);
         float buttonY = screenPos.y + std::sin(angle) * (wheelRadius - 20.0f);
 
         float dx = mousePos.x - buttonX;
         float dy = mousePos.y - buttonY;
-
         float dist = std::sqrt(dx*dx + dy*dy);
 
         if(dist <= 25.0f) {
@@ -235,4 +280,43 @@ std::optional<Direction> Renderer::getClickedDirection(Position hexPos, Vector2 
     }
 
     return std::nullopt;
+}
+
+void Renderer::drawGlobalDirectionRose() const {
+    int screenWidth = GetScreenWidth();
+
+    Vector2 centerScreen = {static_cast<float>(screenWidth - 100), 100.0f};
+    float radius = 60.0f;
+
+    DrawCircle(static_cast<int>(centerScreen.x), static_cast<int>(centerScreen.y), radius + 5, {0,0,0,150});
+    DrawCircle(static_cast<int>(centerScreen.x), static_cast<int>(centerScreen.y), radius, {200,200,200,200});
+
+    Vector3 centerWorld = hexToWorld(0, 0);
+    centerWorld.y = 0.0f;
+
+    for(int i = 0; i < 6; i++) {
+        const char* labels[6] = {"E","NE","NW","W","SW","SE"};
+        constexpr int dq[6] = {1, 1, 0, -1, -1, 0};
+        constexpr int dr[6] = {0, -1, -1, 0, 1, 1};
+
+        Vector3 neighborWorld = hexToWorld(dq[i], dr[i]);
+        neighborWorld.y = 0.0f;
+
+        Vector2 neighborScreen = worldToScreen(neighborWorld, camera);
+        Vector2 centerScreenWorld = worldToScreen(centerWorld, camera);
+
+        float angle = std::atan2(neighborScreen.y - centerScreenWorld.y,
+                                 neighborScreen.x - centerScreenWorld.x);
+
+        float buttonX = centerScreen.x + std::cos(angle) * (radius - 15.0f);
+        float buttonY = centerScreen.y + std::sin(angle) * (radius - 15.0f);
+
+        DrawLine(static_cast<int>(centerScreen.x), static_cast<int>(centerScreen.y),
+                 static_cast<int>(buttonX), static_cast<int>(buttonY),
+                 {100,100,255,200});
+
+        DrawCircle(static_cast<int>(buttonX), static_cast<int>(buttonY), 10.0f, {50,200,50,220});
+
+        DrawText(labels[i], static_cast<int>(buttonX)-6, static_cast<int>(buttonY)-6, 14, BLACK);
+    }
 }
