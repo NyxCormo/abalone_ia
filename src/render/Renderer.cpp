@@ -25,12 +25,12 @@ Renderer::Renderer()
     hexWood = LoadTexture("../assets/textures/hexWood.png");
     tableTexture = LoadTexture("../assets/textures/tableTexture.png");
 
-    Mesh baseMesh = GenMeshCylinderWithUVs(10.0f, 0.2f, 50);
+    Mesh baseMesh = GenMeshCylinderWithUVs(10.0f, 0.1f, 50);
     boardModel = LoadModelFromMesh(baseMesh);
     boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
     boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = tableTexture;
 
-    Mesh hexMesh = GenMeshCylinderWithUVs(1.0f, 0.2f, 6);
+    Mesh hexMesh = GenMeshCylinderWithUVs(1.0f, 0.1f, 6);
     hexModel = LoadModelFromMesh(hexMesh);
     hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
     hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = hexWood;
@@ -61,7 +61,7 @@ Vector3 Renderer::hexToWorld(int q, int r) {
     constexpr float HEX_SIZE = 1.2f;
     float x = HEX_SIZE * std::sqrt(3.0f) * (static_cast<float>(q) + static_cast<float>(r)/2.0f);
     float z = HEX_SIZE * 1.5f * static_cast<float>(r);
-    return {x, 0.0f, z};
+    return {x, 0.1f, z};
 }
 
 Vector2 Renderer::worldToScreen(Vector3 worldPos, const Camera3D &cam) {

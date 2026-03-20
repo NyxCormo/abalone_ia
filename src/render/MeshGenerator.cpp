@@ -3,8 +3,7 @@
 
 Mesh GenMeshCylinderWithUVs(float radius, float height, int sides) {
     Mesh mesh = {0};
-
-    mesh.triangleCount = sides * 4;
+    mesh.triangleCount = sides * 2 + sides + sides;
     mesh.vertexCount = mesh.triangleCount * 3;
 
     mesh.vertices = static_cast<float *>(MemAlloc(mesh.vertexCount * 3 * sizeof(float)));
@@ -62,17 +61,28 @@ Mesh GenMeshCylinderWithUVs(float radius, float height, int sides) {
         float x2 = radius * cosf(angle2);
         float z2 = radius * sinf(angle2);
 
-        mesh.vertices[vIdx++] = 0.0f; mesh.vertices[vIdx++] = halfHeight; mesh.vertices[vIdx++] = 0.0f;
-        mesh.texcoords[uvIdx++] = 0.5f; mesh.texcoords[uvIdx++] = 0.5f;
-        mesh.normals[nIdx++] = 0.0f; mesh.normals[nIdx++] = 1.0f; mesh.normals[nIdx++] = 0.0f;
+        mesh.vertices[vIdx++] = 0.0f;
+        mesh.vertices[vIdx++] = halfHeight;
+        mesh.vertices[vIdx++] = 0.0f;
+        mesh.vertices[vIdx++] = x2;
+        mesh.vertices[vIdx++] = halfHeight;
+        mesh.vertices[vIdx++] = z2;
+        mesh.vertices[vIdx++] = x1;
+        mesh.vertices[vIdx++] = halfHeight;
+        mesh.vertices[vIdx++] = z1;
 
-        mesh.vertices[vIdx++] = x1; mesh.vertices[vIdx++] = halfHeight; mesh.vertices[vIdx++] = z1;
-        mesh.texcoords[uvIdx++] = 0.5f + 0.5f*cosf(angle1); mesh.texcoords[uvIdx++] = 0.5f + 0.5f*sinf(angle1);
-        mesh.normals[nIdx++] = 0.0f; mesh.normals[nIdx++] = 1.0f; mesh.normals[nIdx++] = 0.0f;
+        mesh.texcoords[uvIdx++] = 0.5f;
+        mesh.texcoords[uvIdx++] = 0.5f;
+        mesh.texcoords[uvIdx++] = 0.5f + 0.5f * cosf(angle2);
+        mesh.texcoords[uvIdx++] = 0.5f + 0.5f * sinf(angle2);
+        mesh.texcoords[uvIdx++] = 0.5f + 0.5f * cosf(angle1);
+        mesh.texcoords[uvIdx++] = 0.5f + 0.5f * sinf(angle1);
 
-        mesh.vertices[vIdx++] = x2; mesh.vertices[vIdx++] = halfHeight; mesh.vertices[vIdx++] = z2;
-        mesh.texcoords[uvIdx++] = 0.5f + 0.5f*cosf(angle2); mesh.texcoords[uvIdx++] = 0.5f + 0.5f*sinf(angle2);
-        mesh.normals[nIdx++] = 0.0f; mesh.normals[nIdx++] = 1.0f; mesh.normals[nIdx++] = 0.0f;
+        for(int n = 0 ; n < 3 ; n++){
+            mesh.normals[nIdx++] = 0.0f;
+            mesh.normals[nIdx++] = 1.0f;
+            mesh.normals[nIdx++] = 0.0f;
+        }
     }
 
     for (int i = 0; i < sides; i++) {
