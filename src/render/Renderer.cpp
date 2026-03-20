@@ -12,7 +12,12 @@ Renderer::Renderer()
       whiteMarbleTex{},
       blackMarbleTex{},
       hexWood{},
-      tableTexture{}
+      tableTexture{},
+      marbleShader{},
+      lightPosition{5.0f, 15.0f, 5.0f},
+      marbleShininess{128.0f},
+      marbleSpecularStrength{0.3f},
+      marbleAmbientStrength{0.45f}
 {
     camera.position = {0.0f, 0.0f, 0.0f};
     camera.target = {0.0f, 0.0f, 0.0f};
@@ -25,25 +30,44 @@ Renderer::Renderer()
     hexWood = LoadTexture("../assets/textures/hexWood.png");
     tableTexture = LoadTexture("../assets/textures/tableTexture.png");
 
+    marbleShader = LoadShader(
+        "../assets/shaders/marble_vs.glsl",
+        "../assets/shaders/marble_fs.glsl"
+    );
+
+    // Lights
+    lightPosLoc = GetShaderLocation(marbleShader, "lightPos");
+    lightColorLoc = GetShaderLocation(marbleShader, "lightColor");
+    lightIntensityLoc = GetShaderLocation(marbleShader, "lightIntensity");
+    shininessLoc = GetShaderLocation(marbleShader, "shininess");
+    specularStrengthLoc = GetShaderLocation(marbleShader, "specularStrength");
+    ambientStrengthLoc = GetShaderLocation(marbleShader, "ambientStrength");
+    viewPosLoc = GetShaderLocation(marbleShader, "viewPos");
+
+    marbleShader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocation(marbleShader, "matModel");
+    marbleShader.locs[SHADER_LOC_MATRIX_NORMAL] = GetShaderLocation(marbleShader, "matNormal");
+    marbleShader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(marbleShader, "viewPos");
+
+    // Board
     Mesh baseMesh = GenMeshCylinderWithUVs(10.0f, 0.1f, 50);
     boardModel = LoadModelFromMesh(baseMesh);
     boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
     boardModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = tableTexture;
 
+    // Hex
     Mesh hexMesh = GenMeshCylinderWithUVs(1.0f, 0.1f, 6);
     hexModel = LoadModelFromMesh(hexMesh);
     hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = WHITE;
     hexModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = hexWood;
 
-    Mesh marbleMesh = GenMeshSphere(0.5f, 32, 32);
-
+    // Marbles
+    Mesh marbleMesh = GenMeshSphere(0.8f, 32, 32);
     marbleWhite = LoadModelFromMesh(marbleMesh);
     marbleWhite.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = whiteMarbleTex;
-    marbleWhite.materials[0].maps[MATERIAL_MAP_SPECULAR].color = WHITE;
-
+    marbleWhite.materials[0].shader = marbleShader;
     marbleBlack = LoadModelFromMesh(marbleMesh);
     marbleBlack.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = blackMarbleTex;
-    marbleBlack.materials[0].maps[MATERIAL_MAP_SPECULAR].color = WHITE;
+    marbleBlack.materials[0].shader = marbleShader;
 }
 
 Renderer::~Renderer() {
@@ -55,6 +79,7 @@ Renderer::~Renderer() {
     UnloadTexture(blackMarbleTex);
     UnloadTexture(hexWood);
     UnloadTexture(tableTexture);
+    UnloadShader(marbleShader);
 }
 
 Vector3 Renderer::hexToWorld(int q, int r) {
@@ -72,6 +97,22 @@ bool Renderer::isPointInHex(Vector2 point, Vector2 hexCenter, float radius) {
     float dx = point.x - hexCenter.x;
     float dy = point.y - hexCenter.y;
     return (dx*dx + dy*dy) <= (radius * radius);
+}
+
+void Renderer::updateShaderLighting() {
+    SetShaderValue(marbleShader, viewPosLoc, &camera.position, SHADER_UNIFORM_VEC3);
+
+    SetShaderValue(marbleShader, lightPosLoc, &lightPosition, SHADER_UNIFORM_VEC3);
+
+    Vector3 lightColor = {0.9f, 0.95f, 1.0f};
+    SetShaderValue(marbleShader, lightColorLoc, &lightColor, SHADER_UNIFORM_VEC3);
+
+    float intensity = 1.5f;
+    SetShaderValue(marbleShader, lightIntensityLoc, &intensity, SHADER_UNIFORM_FLOAT);
+
+    SetShaderValue(marbleShader, shininessLoc, &marbleShininess, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(marbleShader, specularStrengthLoc, &marbleSpecularStrength, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(marbleShader, ambientStrengthLoc, &marbleAmbientStrength, SHADER_UNIFORM_FLOAT);
 }
 
 void Renderer::draw(const Board& board) {
@@ -106,6 +147,8 @@ void Renderer::draw(const Board& board) {
 
     camera.target = {0.0f, 0.0f, 0.0f};
 
+    updateShaderLighting();
+
     BeginMode3D(camera);
 
     DrawModel(boardModel, {0.0f, -0.1f, 0.0f}, 1.0f, WHITE);
@@ -129,7 +172,7 @@ void Renderer::draw(const Board& board) {
             if(cell == Cell::Empty) continue;
 
             Vector3 worldPos = hexToWorld(q, r);
-            worldPos.y = 0.6f;
+            worldPos.y = 1.0f;
 
             if(cell == Cell::Black) {
                 DrawModel(marbleBlack, worldPos, 1.0f, WHITE);

@@ -34,7 +34,25 @@ private:
     Texture2D hexWood;
     Texture2D tableTexture;
 
+    Shader marbleShader;
+
+    int lightPosLoc;
+    int lightColorLoc;
+    int lightIntensityLoc;
+    int shininessLoc;
+    int specularStrengthLoc;
+    int ambientStrengthLoc;
+    int viewPosLoc;
+
+    Vector3 lightPosition;
+
+    float marbleShininess;
+    float marbleSpecularStrength;
+    float marbleAmbientStrength;
+
     static Vector3 hexToWorld(int q, int r);
     static Vector2 worldToScreen(Vector3 worldPos, const Camera3D &cam);
     static bool isPointInHex(Vector2 point, Vector2 hexCenter, float radius);
+
+    void updateShaderLighting();
 };
