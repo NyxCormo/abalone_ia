@@ -34,13 +34,13 @@ set(RENDER_SOURCES
         src/render/UI.h
 )
 
-add_executable(Abalone
+add_executable(AbaloneApp
         src/main.cpp
         ${CORE_SOURCES}
         ${RENDER_SOURCES}
-        src/Game.cpp
-        src/Game.h
+        src/app/GameApp.cpp
+        src/app/GameApp.h
 )
 
-target_include_directories(Abalone PRIVATE src)
-target_link_libraries(Abalone PRIVATE raylib)
+target_include_directories(AbaloneApp PRIVATE src)
+target_link_libraries(AbaloneApp PRIVATE raylib)

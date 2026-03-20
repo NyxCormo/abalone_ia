@@ -1,11 +1,11 @@
-#include "Game.h"
+#include "GameApp.h"
 #include <raylib.h>
 #include <iostream>
 
-#include "game/GameEngine.h"
-#include "render/UI.h"
+#include "../game/GameEngine.h"
+#include "../render/UI.h"
 
-Game::Game()
+GameApp::GameApp()
     : renderer_{nullptr},
       input_{},
       showWheel_{false},
@@ -18,7 +18,7 @@ Game::Game()
     state_.board.setup();
 }
 
-void Game::run() {
+void GameApp::run() {
     InitWindow(1400, 900, "Abalone");
     SetTargetFPS(60);
 
@@ -33,7 +33,7 @@ void Game::run() {
     CloseWindow();
 }
 
-void Game::handleInput() {
+void GameApp::handleInput() {
     if (IsKeyPressed(KEY_R)) {
         reset();
         return;
@@ -114,11 +114,11 @@ void Game::handleInput() {
     }
 }
 
-void Game::update() {
+void GameApp::update() {
     // TODO
 }
 
-void Game::render() const {
+void GameApp::render() const {
     BeginDrawing();
     ClearBackground({200, 200, 200, 255});
 
@@ -152,7 +152,7 @@ void Game::render() const {
     EndDrawing();
 }
 
-void Game::reset() {
+void GameApp::reset() {
     state_ = GameState();
     state_.board.setup();
     gameOver_ = false;

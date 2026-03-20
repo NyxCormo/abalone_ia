@@ -3,15 +3,15 @@
 
 #include <memory>
 
-#include "game/InputHandler.h"
-#include "render/Renderer.h"
+#include "../game/InputHandler.h"
+#include "../render/Renderer.h"
 #include <vector>
 
-#include "game/GameState.h"
+#include "../game/GameState.h"
 
-class Game {
+class GameApp {
 public:
-    Game();
+    GameApp();
     void run();
 
 private:
