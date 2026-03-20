@@ -9,9 +9,9 @@
 
 #include "../game/GameState.h"
 
-class GameApp {
+class GameApp3D {
 public:
-    GameApp();
+    GameApp3D();
     void run();
 
 private:

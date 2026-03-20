@@ -36,13 +36,27 @@ set(RENDER_SOURCES
         src/render/Skybox.h
 )
 
-add_executable(AbaloneApp
-        src/main.cpp
-        ${CORE_SOURCES}
-        ${RENDER_SOURCES}
-        src/app/GameApp.cpp
-        src/app/GameApp.h
+set(CONSOLE_SOURCES
+        src/app/GameAppConsole.cpp
+        src/app/GameAppConsole.h
+
 )
 
-target_include_directories(AbaloneApp PRIVATE src)
-target_link_libraries(AbaloneApp PRIVATE raylib)
+add_executable(AbaloneApp3D
+        src/main3D.cpp
+        src/app/GameApp3D.cpp
+        src/app/GameApp3D.h
+        ${CORE_SOURCES}
+        ${RENDER_SOURCES}
+)
+
+add_executable(AbaloneAppConsole
+        src/mainConsole.cpp
+        src/app/GameAppConsole.cpp
+        src/app/GameAppConsole.h
+        ${CORE_SOURCES}
+        ${CONSOLE_SOURCES}
+)
+
+target_include_directories(AbaloneApp3D PRIVATE src)
+target_link_libraries(AbaloneApp3D PRIVATE raylib)

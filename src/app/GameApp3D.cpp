@@ -1,11 +1,11 @@
-#include "GameApp.h"
+#include "GameApp3D.h"
 #include <raylib.h>
 #include <iostream>
 
 #include "../game/GameEngine.h"
 #include "../render/UI.h"
 
-GameApp::GameApp()
+GameApp3D::GameApp3D()
     : renderer_{nullptr},
       input_{},
       showWheel_{false},
@@ -18,7 +18,7 @@ GameApp::GameApp()
     state_.board.setup();
 }
 
-void GameApp::run() {
+void GameApp3D::run() {
     InitWindow(1400, 900, "Abalone");
     SetTargetFPS(60);
 
@@ -37,7 +37,7 @@ void GameApp::run() {
     CloseWindow();
 }
 
-void GameApp::handleInput() {
+void GameApp3D::handleInput() {
     if (IsKeyPressed(KEY_R)) {
         reset();
         return;
@@ -124,11 +124,11 @@ void GameApp::handleInput() {
     }
 }
 
-void GameApp::update() {
+void GameApp3D::update() {
     // TODO
 }
 
-void GameApp::render() const {
+void GameApp3D::render() const {
     BeginDrawing();
     ClearBackground({200, 200, 200, 255});
 
@@ -162,7 +162,7 @@ void GameApp::render() const {
     EndDrawing();
 }
 
-void GameApp::reset() {
+void GameApp3D::reset() {
     state_ = GameState();
     state_.board.setup();
     gameOver_ = false;
