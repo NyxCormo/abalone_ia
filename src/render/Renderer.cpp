@@ -238,7 +238,7 @@ std::optional<Position> Renderer::getClickedHex(Vector2 mousePos) const {
 
 void Renderer::drawSelectionWheel(Position center, const std::vector<Direction>& directions) const {
     Vector3 worldPos = hexToWorld(center.q(), center.r());
-    worldPos.y = 1.5f;
+    worldPos.y = 5.5f;
 
     Vector2 screenPos = worldToScreen(worldPos, camera);
 
@@ -379,7 +379,7 @@ void Renderer::drawGlobalDirectionRose() const {
     DrawCircle(static_cast<int>(centerScreen.x), static_cast<int>(centerScreen.y), radius, {200,200,200,200});
 
     Vector3 centerWorld = hexToWorld(0, 0);
-    centerWorld.y = 0.0f;
+    centerWorld.y = 5.0f;
 
     for(int i = 0; i < 6; i++) {
         const char* labels[6] = {"E","NE","NW","W","SW","SE"};
@@ -387,7 +387,7 @@ void Renderer::drawGlobalDirectionRose() const {
         constexpr int dr[6] = {0, -1, -1, 0, 1, 1};
 
         Vector3 neighborWorld = hexToWorld(dq[i], dr[i]);
-        neighborWorld.y = 0.0f;
+        neighborWorld.y = 5.0f;
 
         Vector2 neighborScreen = worldToScreen(neighborWorld, camera);
         Vector2 centerScreenWorld = worldToScreen(centerWorld, camera);
