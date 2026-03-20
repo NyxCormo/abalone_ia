@@ -32,6 +32,8 @@ set(RENDER_SOURCES
         src/render/MeshGenerator.h
         src/render/UI.cpp
         src/render/UI.h
+        src/render/Skybox.cpp
+        src/render/Skybox.h
 )
 
 add_executable(AbaloneApp

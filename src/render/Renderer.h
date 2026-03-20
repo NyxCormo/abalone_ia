@@ -6,6 +6,8 @@
 #include <vector>
 #include <optional>
 
+#include "Skybox.h"
+
 class Renderer
 {
 public:
@@ -23,6 +25,8 @@ public:
     void drawGlobalDirectionRose() const;
 
 private:
+
+    float CameraDistance;
 
     Model boardModel;
     Model hexModel;
@@ -49,6 +53,8 @@ private:
     float marbleShininess;
     float marbleSpecularStrength;
     float marbleAmbientStrength;
+
+    Skybox skybox;
 
     static Vector3 hexToWorld(int q, int r);
     static Vector2 worldToScreen(Vector3 worldPos, const Camera3D &cam);

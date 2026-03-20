@@ -3,8 +3,11 @@
 
 #include "MeshGenerator.h"
 
+float CameraDistance = 20.0f;
+
 Renderer::Renderer()
     : camera{},
+      CameraDistance(25.0f),
       boardModel{},
       hexModel{},
       marbleWhite{},
@@ -14,10 +17,10 @@ Renderer::Renderer()
       hexWood{},
       tableTexture{},
       marbleShader{},
-      lightPosition{5.0f, 15.0f, 5.0f},
-      marbleShininess{128.0f},
-      marbleSpecularStrength{0.3f},
-      marbleAmbientStrength{0.45f}
+      lightPosition{10.0f, 10.0f, 20.0f},
+      marbleShininess{256.0f},
+      marbleSpecularStrength{0.5f},
+      marbleAmbientStrength{0.5f}
 {
     camera.position = {0.0f, 0.0f, 0.0f};
     camera.target = {0.0f, 0.0f, 0.0f};
@@ -68,6 +71,19 @@ Renderer::Renderer()
     marbleBlack = LoadModelFromMesh(marbleMesh);
     marbleBlack.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = blackMarbleTex;
     marbleBlack.materials[0].shader = marbleShader;
+
+    // Skybox Cubemap :
+    skybox.loadCubemap(
+     "../assets/skybox/px.png", // right → positive X
+     "../assets/skybox/nx.png", // left → negative X
+     "../assets/skybox/py.png", // top → positive Y
+     "../assets/skybox/ny.png", // bottom → negative Y
+     "../assets/skybox/pz.png", // front → positive Z
+     "../assets/skybox/nz.png"  // back → negative Z
+ );
+
+    // Skybox Panoramic
+    // skybox.loadPanoramic("../assets/skybox/panoramic.png");
 }
 
 Renderer::~Renderer() {
@@ -80,13 +96,14 @@ Renderer::~Renderer() {
     UnloadTexture(hexWood);
     UnloadTexture(tableTexture);
     UnloadShader(marbleShader);
+    skybox.unload();
 }
 
 Vector3 Renderer::hexToWorld(int q, int r) {
     constexpr float HEX_SIZE = 1.2f;
     float x = HEX_SIZE * std::sqrt(3.0f) * (static_cast<float>(q) + static_cast<float>(r)/2.0f);
     float z = HEX_SIZE * 1.5f * static_cast<float>(r);
-    return {x, 0.1f, z};
+    return {x, 5.1f, z};
 }
 
 Vector2 Renderer::worldToScreen(Vector3 worldPos, const Camera3D &cam) {
@@ -105,7 +122,8 @@ void Renderer::updateShaderLighting() {
     SetShaderValue(marbleShader, lightPosLoc, &lightPosition, SHADER_UNIFORM_VEC3);
 
     Vector3 lightColor = {0.9f, 0.95f, 1.0f};
-    SetShaderValue(marbleShader, lightColorLoc, &lightColor, SHADER_UNIFORM_VEC3);
+    Vector3 sunsetLightColor = {1.0f, 0.588f, 0.314f};
+    SetShaderValue(marbleShader, lightColorLoc, &sunsetLightColor, SHADER_UNIFORM_VEC3);
 
     float intensity = 1.5f;
     SetShaderValue(marbleShader, lightIntensityLoc, &intensity, SHADER_UNIFORM_FLOAT);
@@ -116,8 +134,7 @@ void Renderer::updateShaderLighting() {
 }
 
 void Renderer::draw(const Board& board) {
-    constexpr float CAMERA_DISTANCE = 20.0f;
-    constexpr float CAMERA_ANGLE_SPEED = 0.6f;
+    constexpr float CAMERA_ANGLE_SPEED = 0.8f;
 
     static float cameraAngleH = 0.0f;
     static float cameraAngleV = 0.7f;
@@ -136,22 +153,28 @@ void Renderer::draw(const Board& board) {
         cameraAngleV -= CAMERA_ANGLE_SPEED * GetFrameTime();
     }
 
+    float wheelMove = GetMouseWheelMove();
+    CameraDistance += wheelMove * 2.0f;
+    if (CameraDistance < 15.0f) CameraDistance = 15.0f;
+
     constexpr float MIN_VERTICAL = 0.1f;
     constexpr float MAX_VERTICAL = 3.04f;
     if (cameraAngleV < MIN_VERTICAL) cameraAngleV = MIN_VERTICAL;
     if (cameraAngleV > MAX_VERTICAL) cameraAngleV = MAX_VERTICAL;
 
-    camera.position.x = CAMERA_DISTANCE * std::sin(cameraAngleV) * std::sin(cameraAngleH);
-    camera.position.y = CAMERA_DISTANCE * std::cos(cameraAngleV);
-    camera.position.z = CAMERA_DISTANCE * std::sin(cameraAngleV) * std::cos(cameraAngleH);
+    camera.position.x = CameraDistance * std::sin(cameraAngleV) * std::sin(cameraAngleH);
+    camera.position.y = CameraDistance * std::cos(cameraAngleV);
+    camera.position.z = CameraDistance * std::sin(cameraAngleV) * std::cos(cameraAngleH);
 
-    camera.target = {0.0f, 0.0f, 0.0f};
+    camera.target = {0.0f, 5.0f, 0.0f};
 
     updateShaderLighting();
 
     BeginMode3D(camera);
 
-    DrawModel(boardModel, {0.0f, -0.1f, 0.0f}, 1.0f, WHITE);
+    skybox.draw(camera);
+
+    DrawModel(boardModel, {0.0f, 5.0f, 0.0f}, 1.0f, WHITE);
 
     for(int q = -4; q <= 4; q++) {
         for(int r = -4; r <= 4; r++) {
@@ -172,7 +195,7 @@ void Renderer::draw(const Board& board) {
             if(cell == Cell::Empty) continue;
 
             Vector3 worldPos = hexToWorld(q, r);
-            worldPos.y = 1.0f;
+            worldPos.y = 6.0f;
 
             if(cell == Cell::Black) {
                 DrawModel(marbleBlack, worldPos, 1.0f, WHITE);
