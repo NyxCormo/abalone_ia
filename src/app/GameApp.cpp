@@ -22,6 +22,8 @@ void GameApp::run() {
     InitWindow(1400, 900, "Abalone");
     SetTargetFPS(60);
 
+    UI::init();
+
     renderer_ = std::make_unique<Renderer>();
 
     while (!WindowShouldClose()) {
@@ -29,6 +31,8 @@ void GameApp::run() {
         update();
         render();
     }
+
+    UI::unload();
 
     CloseWindow();
 }
@@ -79,6 +83,12 @@ void GameApp::handleInput() {
             showWheel_ = false;
         }
         return;
+    }
+
+    if (IsMouseButtonPressed(MOUSE_MIDDLE_BUTTON)) {
+        state_.winner = Player::Black;
+        gameOver_ = true;
+        UI::drawGameOver(state_);
     }
 
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !showWheel_) {

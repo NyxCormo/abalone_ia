@@ -4,6 +4,32 @@
 
 #include "game/GameEngine.h"
 
+Texture2D UI::backgroundGameOverTexture_ = {};
+Texture2D UI::panelTexture_ = {};
+Texture2D UI::borderPanelTexture_ = {};
+Texture2D UI::buttonTexture_ = {};
+
+int UI::panelX_ = 0;
+int UI::panelY_ = 0;
+int UI::panelWidth_ = 0;
+int UI::panelHeight_ = 0;
+
+void UI::init() {
+    backgroundGameOverTexture_ = LoadTexture("../assets/textures/whiteMarble.png");
+    panelTexture_ = LoadTexture("../assets/textures/hexWood.png");
+    borderPanelTexture_ = LoadTexture("../assets/textures/blackMarble.png");
+    buttonTexture_ = LoadTexture("../assets/textures/tableTexture.png");
+    
+    panelX_ = 0;
+    panelY_ = 0;
+    panelWidth_ = 1400;
+    panelHeight_ = 900;
+}
+
+void UI::unload() {
+    UnloadTexture(backgroundGameOverTexture_);
+}
+
 void UI::drawHUD(const GameState& state) {
     DrawText("ABALONE", 10, 10, 24, BLACK);
     DrawText(TextFormat("Move: %d", state.moveCount), 10, 45, 20, DARKGRAY);
@@ -23,7 +49,23 @@ void UI::drawHUD(const GameState& state) {
 }
 
 void UI::drawGameOver(const GameState& state) {
-    DrawRectangle(0, 0, 1400, 900, {0, 0, 0, 180});
+    DrawTexturePro(
+        backgroundGameOverTexture_,
+        {0, 0, static_cast<float>(backgroundGameOverTexture_.width), static_cast<float>(backgroundGameOverTexture_.height)},
+        {
+            static_cast<float>(panelX_),
+            static_cast<float>(panelY_),
+            static_cast<float>(panelWidth_),
+            static_cast<float>(panelHeight_)
+        },
+        {0, 0},
+        0.0f,
+        WHITE
+    );
+
+    if (backgroundGameOverTexture_.id == 0) {
+        DrawRectangle(panelX_, panelY_, panelWidth_, panelHeight_, {100, 100, 100, 100});
+    }
 
     Player winner = state.winner.value();
 
@@ -32,14 +74,42 @@ void UI::drawGameOver(const GameState& state) {
     int centerX = screenWidth / 2;
     int centerY = screenHeight / 2;
 
-    int panelWidth = 600;
-    int panelHeight = 300;
-    int panelX = centerX - panelWidth / 2;
-    int panelY = centerY - panelHeight / 2;
+    int panelWidth_ = 600;
+    int panelHeight_ = 300;
+    int panelX_ = centerX - panelWidth_ / 2;
+    int panelY_ = centerY - panelHeight_ / 2;
 
-    DrawRectangle(panelX, panelY, panelWidth, panelHeight, {139, 90, 43, 255});
-    DrawRectangle(panelX + 10, panelY + 10, panelWidth - 20, panelHeight - 20, {101, 67, 33, 255});
-    DrawRectangle(panelX + 15, panelY + 15, panelWidth - 30, panelHeight - 30, {120, 81, 45, 255});
+    //DrawRectangle(panelX, panelY, panelWidth, panelHeight, {139, 90, 43, 255});
+    //DrawRectangle(panelX + 10, panelY + 10, panelWidth - 20, panelHeight - 20, {101, 67, 33, 255});
+    //DrawRectangle(panelX + 15, panelY + 15, panelWidth - 30, panelHeight - 30, {120, 81, 45, 255});
+
+
+    DrawTexturePro(
+        buttonTexture_,
+        {0, 0, static_cast<float>(buttonTexture_.width), static_cast<float>(buttonTexture_.height)},
+{
+            static_cast<float>(panelX_),
+            static_cast<float>(panelY_),
+            static_cast<float>(panelWidth_),
+            static_cast<float>(panelHeight_)
+        },
+        {0, 0},
+        0.0f,
+        WHITE
+    );
+    DrawTexturePro(
+        panelTexture_,
+        {0, 0, static_cast<float>(panelTexture_.width), static_cast<float>(panelTexture_.height)},
+{
+            static_cast<float>(panelX_+20),
+            static_cast<float>(panelY_+20),
+            static_cast<float>(panelWidth_-40),
+            static_cast<float>(panelHeight_-40)
+        },
+        {0, 0},
+        0.0f,
+        WHITE
+    );
 
     const char* gameOverText = "GAME OVER!";
     int gameOverWidth = MeasureText(gameOverText, 60);
