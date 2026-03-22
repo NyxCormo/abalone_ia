@@ -18,7 +18,6 @@ void GameAppConsole::run() {
 
     bool running = true;
     while (running && !GameEngine::isGameOver(state_)) {
-        clearScreen();
         displayBoard();
         displayStatus();
 
@@ -26,7 +25,6 @@ void GameAppConsole::run() {
     }
 
     if (GameEngine::isGameOver(state_)) {
-        clearScreen();
         displayBoard();
         displayGameOver();
     } else {
@@ -36,101 +34,113 @@ void GameAppConsole::run() {
 
 void GameAppConsole::displayBoard() const {
     clearScreen();
-    std::cout << "=== PLATEAU ABALONE ===\n\n";
+
+    std::cout << "\n=== PLATEAU ABALONE ===\n\n";
 
     for (int i = 0; i < 9; i++) {
-        constexpr char rowLabels[] = {'I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A'};
-        constexpr int rows[] = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+        constexpr char rowLabels[] = {'I','H','G','F','E','D','C','B','A'};
+        constexpr int rows[] = {-4,-3,-2,-1,0,1,2,3,4};
+        constexpr int MAX_CELLS = 9;
         int r = rows[i];
         int qMin = std::max(-4, -4 - r);
         int qMax = std::min(4, 4 - r);
+        int cellCount = qMax - qMin + 1;
 
-        std::cout << " " << rowLabels[i] << "  ";
+        int padding = (MAX_CELLS - cellCount);
 
-        int leadingSpaces = std::abs(r);
-        for (int s = 0; s < leadingSpaces; s++) {
-            std::cout << "  ";
-        }
+        std::cout << rowLabels[i] << " ";
+        for (int s = 0; s < padding; s++) std::cout << " ";
 
         for (int q = qMin; q <= qMax; q++) {
             Position pos(q, r);
             char cell = getCellChar(pos);
-
-            if (cell == 'W') {
-                std::cout << "⚪ ";
-            } else if (cell == 'B') {
-                std::cout << "⚫ ";
-            } else {
-                std::cout << "·  ";
-            }
+            char symbol = (cell == 'W') ? 'O' : (cell == 'B') ? 'X' : '.';
+            std::cout << symbol << " ";
         }
         std::cout << "\n";
     }
 
-    std::cout << "\n     ";
+    std::cout << "  ";
     for (int col = 1; col <= 9; col++) {
-        std::cout << col << "  ";
+        std::cout << col << " ";
     }
     std::cout << "\n\n";
 }
 
 void GameAppConsole::displayStatus() const {
-    std::cout << "=== STATUT DU JEU ===\n\n";
+    std::cout << "╔════════════════════════════════════════════╗\n";
+    std::cout << "║ STATUT DU JEU                              ║\n";
+    std::cout << "╠════════════════════════════════════════════╣\n";
 
     std::string currentPlayerStr = (state_.currentPlayer == Player::Black) ? "NOIR ⚪" : "BLANC ⚫";
-    std::cout << "Joueur actuel : " << std::left << std::setw(23) << currentPlayerStr << "\n";
+    std::cout << "║ Joueur actuel : " << std::left << std::setw(23) << currentPlayerStr << "║\n";
 
     int blackScore = 14 - state_.board.whiteEjected();
     int whiteScore = 14 - state_.board.blackEjected();
 
-    std::cout << "Score NOIR    : " << std::setw(27) << blackScore << "\n";
-    std::cout << "Score BLANC   : " << std::setw(27) << whiteScore << "\n";
-    std::cout << "Coups joués   : " << std::setw(27) << state_.moveCount << "\n";
+    std::cout << "║ Score NOIR    : " << std::setw(27) << blackScore << "║\n";
+    std::cout << "║ Score BLANC   : " << std::setw(27) << whiteScore << "║\n";
+    std::cout << "║ Coups joués   : " << std::setw(27) << state_.moveCount << "║\n";
 
     std::ostringstream oss;
     oss << "Billes éjectées B:" << state_.board.blackEjected()
         << " / W:" << state_.board.whiteEjected();
 
-    std::cout << oss.str() << "\n\n";
+    std::cout << "║ " << std::left << std::setw(42) << oss.str() << "║\n";
+    std::cout << "╚════════════════════════════════════════════╝\n\n";
 }
 
 void GameAppConsole::displayHelp() {
     std::cout << "\n";
-    std::cout << "=== AIDE - COMMANDES ===\n\n";
-    std::cout << "Format coup :\n";
-    std::cout << "  1 bille   : A1 E    (pos + direction)\n";
-    std::cout << "  2 billes  : A1-B1 E (pos-pos + dir)\n";
-    std::cout << "  3 billes  : A1-C1 E (pos-pos + dir)\n\n";
-    std::cout << "Directions : E, W, NE, NW, SE, SW\n\n";
-    std::cout << "Commandes :\n";
-    std::cout << "  /help  - Afficher cette aide\n";
-    std::cout << "  /moves - Afficher tous les coups légaux\n";
-    std::cout << "  /quit  - Quitter le jeu\n\n";
+    std::cout << "╔════════════════════════════════════════════╗\n";
+    std::cout << "║ AIDE - COMMANDES                           ║\n";
+    std::cout << "╠════════════════════════════════════════════╣\n";
+    std::cout << "║ Format coup :                              ║\n";
+    std::cout << "║   1 bille   : A1 E    (pos + direction)    ║\n";
+    std::cout << "║   2 billes  : A1-B1 E (pos-pos + dir)      ║\n";
+    std::cout << "║   3 billes  : A1-C1 E (pos-pos + dir)      ║\n";
+    std::cout << "║                                            ║\n";
+    std::cout << "║ Directions : E, W, NE, NW, SE, SW          ║\n";
+    std::cout << "║                                            ║\n";
+    std::cout << "║ Commandes :                                ║\n";
+    std::cout << "║   /help  - Afficher cette aide             ║\n";
+    std::cout << "║   /moves - Afficher tous les coups légaux  ║\n";
+    std::cout << "║   /quit  - Quitter le jeu                  ║\n";
+    std::cout << "╚════════════════════════════════════════════╝\n";
+    std::cout << "\n";
 }
 
 void GameAppConsole::displayGameOver() const {
     clearScreen();
-    std::cout << "PARTIE TERMINÉE !\n\n";
+    std::cout << "╔════════════════════════════════════════════╗\n";
+    std::cout << "║           PARTIE TERMINÉE !                ║\n";
+    std::cout << "╠════════════════════════════════════════════╣\n";
 
     if (state_.winner.has_value()) {
         Player winner = state_.winner.value();
         std::string winnerStr = (winner == Player::Black) ? "NOIR ⚪" : "BLANC ⚫";
-        std::cout << "Vainqueur   : " << std::left << std::setw(27) << winnerStr << "\n";
+        std::cout << "║ Vainqueur   : " << std::left << std::setw(27) << winnerStr << "║\n";
     }
 
     int blackScore = 14 - state_.board.whiteEjected();
     int whiteScore = 14 - state_.board.blackEjected();
 
-    std::cout << "Score final :\n";
-    std::cout << "  NOIR  : " << std::setw(31) << blackScore << "\n";
-    std::cout << "  BLANC : " << std::setw(31) << whiteScore << "\n";
-    std::cout << "Coups joués : " << std::setw(27) << state_.moveCount << "\n\n";
+    std::cout << "║ Score final :                              ║\n";
+    std::cout << "║   NOIR  : " << std::setw(31) << blackScore << "║\n";
+    std::cout << "║   BLANC : " << std::setw(31) << whiteScore << "║\n";
+    std::cout << "║ Coups joués : " << std::setw(27) << state_.moveCount << "║\n";
+    std::cout << "╚════════════════════════════════════════════╝\n";
+    std::cout << "\n";
 }
 
 void GameAppConsole::displayWelcome() {
     clearScreen();
     std::cout << "\n";
-    std::cout << "=== ABALONE - CONSOLE ===\n\n";
+    std::cout << "╔════════════════════════════════════════════╗\n";
+    std::cout << "║                                            ║\n";
+    std::cout << "║            ABALONE - CONSOLE               ║\n";
+    std::cout << "║                                            ║\n";
+    std::cout << "╚════════════════════════════════════════════╝\n\n";
     std::cout << "Tapez '/help' pour afficher l'aide.\n";
     std::cout << "Appuyez sur Entrée pour commencer...\n";
     std::cin.get();
@@ -163,7 +173,9 @@ bool GameAppConsole::processInput() {
         std::vector<Move> legalMoves = GameEngine::getLegalMoves(state_);
 
         std::cout << "\n";
-        std::cout << "=== COUPS LÉGAUX (" << std::setw(2) << legalMoves.size() << " disponibles) ===\n\n";
+        std::cout << "╔════════════════════════════════════════════╗\n";
+        std::cout << "║ COUPS LÉGAUX (" << std::setw(2) << legalMoves.size() << " disponibles)             ║\n";
+        std::cout << "╚════════════════════════════════════════════╝\n\n";
 
         int count = 0;
         for (const Move& move : legalMoves) {
@@ -355,6 +367,7 @@ char GameAppConsole::getCellChar(const Position& pos) const {
 }
 
 void GameAppConsole::clearScreen() {
+    std::cout << std::flush;
     system("clear");
 }
 
