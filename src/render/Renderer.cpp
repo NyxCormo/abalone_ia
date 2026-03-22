@@ -157,8 +157,8 @@ void Renderer::draw(const Board& board) {
     CameraDistance += wheelMove * 2.0f;
     if (CameraDistance < 15.0f) CameraDistance = 15.0f;
 
-    constexpr float MIN_VERTICAL = 0.1f;
-    constexpr float MAX_VERTICAL = 3.04f;
+    constexpr float MIN_VERTICAL = 0.01f;
+    constexpr float MAX_VERTICAL = PI / 2.0f - 0.5f;
     if (cameraAngleV < MIN_VERTICAL) cameraAngleV = MIN_VERTICAL;
     if (cameraAngleV > MAX_VERTICAL) cameraAngleV = MAX_VERTICAL;
 
@@ -387,7 +387,7 @@ void Renderer::drawGlobalDirectionRose() const {
         constexpr int dr[6] = {0, -1, -1, 0, 1, 1};
 
         Vector3 neighborWorld = hexToWorld(dq[i], dr[i]);
-        neighborWorld.y = 5.0f;
+        neighborWorld.y = 6.0f;
 
         Vector2 neighborScreen = worldToScreen(neighborWorld, camera);
         Vector2 centerScreenWorld = worldToScreen(centerWorld, camera);

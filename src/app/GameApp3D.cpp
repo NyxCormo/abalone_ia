@@ -117,7 +117,6 @@ void GameApp3D::handleInput() {
                 showWheel_ = true;
                 wheelCenter_ = input_.getSelectedMarbles()[0];
             } else {
-                // Invalid selection, clear it
                 input_.clearSelection();
             }
         }
@@ -138,10 +137,9 @@ void GameApp3D::render() const {
         for (const auto& pos : input_.getSelectedMarbles()) {
             Vector3 worldPos = {
                 1.2f * std::sqrt(3.0f) * (static_cast<float>(pos.q()) + static_cast<float>(pos.r())/2.0f),
-                0.0f,
+                6.0f,
                 1.2f * 1.5f * static_cast<float>(pos.r())
             };
-            worldPos.y = 1.0f;
 
             Vector2 screenPos = GetWorldToScreen(worldPos, renderer_->camera);
             DrawCircleLines(static_cast<int>(screenPos.x), static_cast<int>(screenPos.y), 35.0f, YELLOW);
