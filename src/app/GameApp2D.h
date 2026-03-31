@@ -38,6 +38,7 @@ private:
         enum class FieldId {
             Controller,
             Depth,
+            ThreadCount,
             MarbleWeight,
             EjectionWeight,
             CenterWeight

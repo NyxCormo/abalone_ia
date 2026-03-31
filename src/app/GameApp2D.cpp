@@ -113,7 +113,7 @@ GameApp2D::GameApp2D()
 
 void GameApp2D::run() {
     InitWindow(screenWidth_, screenHeight_, "Abalone 2D");
-    SetTargetFPS(200);
+    SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
         handleInput();
@@ -227,6 +227,8 @@ void GameApp2D::handleSetupInput() {
                 MinimaxAI& ai = config.ai;
                 if (control.field == SetupControl::FieldId::Depth) {
                     ai.setDepth(ai.depth() + delta);
+                } else if (control.field == SetupControl::FieldId::ThreadCount) {
+                    ai.setThreadCount(ai.threadCount() + delta);
                 } else if (control.field == SetupControl::FieldId::MarbleWeight) {
                     ai.setMarbleWeight(ai.marbleWeight() + delta * 10);
                 } else if (control.field == SetupControl::FieldId::EjectionWeight) {
@@ -395,6 +397,8 @@ void GameApp2D::renderSetup() const {
 
             if (control.field == SetupControl::FieldId::Depth) {
                 drawIntegerEditor(control.bounds, control.label.c_str(), config.ai.depth(), active, textOverride);
+            } else if (control.field == SetupControl::FieldId::ThreadCount) {
+                drawIntegerEditor(control.bounds, control.label.c_str(), config.ai.threadCount(), active, textOverride);
             } else if (control.field == SetupControl::FieldId::MarbleWeight) {
                 drawIntegerEditor(control.bounds, control.label.c_str(), config.ai.marbleWeight(), active, textOverride);
             } else if (control.field == SetupControl::FieldId::EjectionWeight) {
@@ -506,9 +510,10 @@ void GameApp2D::renderSidebar() const {
 
         DrawText(
             TextFormat(
-                "%s IA d=%d b=%d e=%d c=%d",
+                "%s IA d=%d t=%d b=%d e=%d c=%d",
                 playerLabel(player),
                 config.ai.depth(),
+                config.ai.threadCount(),
                 config.ai.marbleWeight(),
                 config.ai.ejectionWeight(),
                 config.ai.centerWeight()
@@ -617,8 +622,9 @@ std::vector<GameApp2D::SetupControl> GameApp2D::setupControlsFor(Player player) 
         return controls;
     }
 
-    const std::array<SetupControl, 4> editorTemplates = {{
+    const std::array<SetupControl, 5> editorTemplates = {{
         {"Profondeur MinMax", SetupControl::Type::IntegerEditor, SetupControl::FieldId::Depth, {}},
+        {"Threads CPU", SetupControl::Type::IntegerEditor, SetupControl::FieldId::ThreadCount, {}},
         {"Poids billes", SetupControl::Type::IntegerEditor, SetupControl::FieldId::MarbleWeight, {}},
         {"Poids ejection", SetupControl::Type::IntegerEditor, SetupControl::FieldId::EjectionWeight, {}},
         {"Poids centre", SetupControl::Type::IntegerEditor, SetupControl::FieldId::CenterWeight, {}}
@@ -689,6 +695,7 @@ int GameApp2D::setupFieldValue(Player player, SetupControl::FieldId field) const
     const MinimaxAI& ai = configFor(player).ai;
     switch (field) {
         case SetupControl::FieldId::Depth: return ai.depth();
+        case SetupControl::FieldId::ThreadCount: return ai.threadCount();
         case SetupControl::FieldId::MarbleWeight: return ai.marbleWeight();
         case SetupControl::FieldId::EjectionWeight: return ai.ejectionWeight();
         case SetupControl::FieldId::CenterWeight: return ai.centerWeight();
@@ -702,6 +709,9 @@ void GameApp2D::setSetupFieldValue(Player player, SetupControl::FieldId field, i
     switch (field) {
         case SetupControl::FieldId::Depth:
             ai.setDepth(value);
+            break;
+        case SetupControl::FieldId::ThreadCount:
+            ai.setThreadCount(value);
             break;
         case SetupControl::FieldId::MarbleWeight:
             ai.setMarbleWeight(value);

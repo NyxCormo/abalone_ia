@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
 #include "../game/GameState.h"
 #include "../game/Move.h"
@@ -12,9 +13,10 @@ class MinimaxAI {
 public:
     struct Settings {
         int depth = 2;
+        int threadCount = 10;
         int marbleWeight = 100;
-        int ejectionWeight = 120;
-        int centerWeight = 1;
+        int ejectionWeight = 300;
+        int centerWeight = 10;
     };
 
     MinimaxAI();
@@ -25,6 +27,8 @@ public:
     [[nodiscard]] const Settings& settings() const;
     void setDepth(int depth);
     [[nodiscard]] int depth() const;
+    void setThreadCount(int threadCount);
+    [[nodiscard]] int threadCount() const;
     void setMarbleWeight(int weight);
     [[nodiscard]] int marbleWeight() const;
     void setEjectionWeight(int weight);
@@ -45,17 +49,20 @@ private:
         BoundType bound = BoundType::Exact;
     };
 
+    using TranspositionTable = std::unordered_map<std::uint64_t, TranspositionEntry>;
+
     Settings settings_;
-    mutable std::unordered_map<std::uint64_t, TranspositionEntry> transpositionTable_;
 
     [[nodiscard]] int evaluate(const GameState& state, Player player) const;
     [[nodiscard]] std::uint64_t hashState(const GameState& state) const;
+    [[nodiscard]] static int defaultThreadCount();
     [[nodiscard]] int negamax(
         const GameState& state,
         int depth,
         int alpha,
         int beta,
-        Player currentPlayer
+        Player currentPlayer,
+        TranspositionTable& transpositionTable
     ) const;
 };
 

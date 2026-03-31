@@ -4,6 +4,7 @@ project(Abalone)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(Threads REQUIRED)
 find_package(raylib 5.0 QUIET)
 if (NOT raylib_FOUND)
     include(FetchContent)
@@ -71,6 +72,6 @@ add_executable(AbaloneApp2D
 )
 
 target_include_directories(AbaloneApp3D PRIVATE src)
-target_link_libraries(AbaloneApp3D PRIVATE raylib)
+target_link_libraries(AbaloneApp3D PRIVATE raylib Threads::Threads)
 target_include_directories(AbaloneApp2D PRIVATE src)
-target_link_libraries(AbaloneApp2D PRIVATE raylib)
+target_link_libraries(AbaloneApp2D PRIVATE raylib Threads::Threads)

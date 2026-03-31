@@ -1,8 +1,11 @@
 #include "MinimaxAI.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <limits>
+#include <thread>
+#include <vector>
 
 #include "../game/GameEngine.h"
 
@@ -27,6 +30,10 @@ int clampDepth(int depth) {
     return std::max(1, depth);
 }
 
+int clampThreadCount(int threadCount) {
+    return std::max(1, threadCount);
+}
+
 int clampWeight(int weight) {
     return std::max(0, weight);
 }
@@ -42,16 +49,10 @@ std::uint64_t splitmix64(std::uint64_t value) {
 MinimaxAI::MinimaxAI() : MinimaxAI(Settings{}) {}
 
 MinimaxAI::MinimaxAI(Settings settings) : settings_(settings) {
-    settings_.depth = clampDepth(settings_.depth);
-    settings_.marbleWeight = clampWeight(settings_.marbleWeight);
-    settings_.ejectionWeight = clampWeight(settings_.ejectionWeight);
-    settings_.centerWeight = clampWeight(settings_.centerWeight);
-    transpositionTable_.reserve(65536);
+    setSettings(settings);
 }
 
 std::optional<Move> MinimaxAI::chooseMove(const GameState& state) const {
-    transpositionTable_.clear();
-
     std::vector<Move> legalMoves = GameEngine::getLegalMoves(state);
     if (legalMoves.empty()) {
         return std::nullopt;
@@ -62,22 +63,51 @@ std::optional<Move> MinimaxAI::chooseMove(const GameState& state) const {
     });
 
     const Player player = state.currentPlayer;
-    int bestScore = std::numeric_limits<int>::min();
+    std::vector<int> scores(legalMoves.size(), std::numeric_limits<int>::min());
+    const int workerCount = std::min<int>(settings_.threadCount, static_cast<int>(legalMoves.size()));
+    std::atomic<std::size_t> nextMoveIndex{0};
+
+    auto evaluateMoves = [&]() {
+        TranspositionTable transpositionTable;
+        transpositionTable.reserve(65536);
+
+        while (true) {
+            const std::size_t moveIndex = nextMoveIndex.fetch_add(1, std::memory_order_relaxed);
+            if (moveIndex >= legalMoves.size()) {
+                break;
+            }
+
+            transpositionTable.clear();
+            const GameState nextState = GameEngine::applyMove(state, legalMoves[moveIndex]);
+            scores[moveIndex] = -negamax(
+                nextState,
+                settings_.depth,
+                std::numeric_limits<int>::min() + 1,
+                std::numeric_limits<int>::max(),
+                opponent(player),
+                transpositionTable
+            );
+        }
+    };
+
+    std::vector<std::thread> workers;
+    workers.reserve(static_cast<std::size_t>(std::max(0, workerCount - 1)));
+    for (int i = 1; i < workerCount; ++i) {
+        workers.emplace_back(evaluateMoves);
+    }
+
+    evaluateMoves();
+
+    for (std::thread& worker : workers) {
+        worker.join();
+    }
+
+    int bestScore = scores.front();
     std::optional<Move> bestMove = legalMoves.front();
-
-    for (const Move& move : legalMoves) {
-        const GameState nextState = GameEngine::applyMove(state, move);
-        const int score = -negamax(
-            nextState,
-            settings_.depth,
-            std::numeric_limits<int>::min() + 1,
-            std::numeric_limits<int>::max(),
-            opponent(player)
-        );
-
-        if (score > bestScore) {
-            bestScore = score;
-            bestMove = move;
+    for (std::size_t i = 1; i < legalMoves.size(); ++i) {
+        if (scores[i] > bestScore) {
+            bestScore = scores[i];
+            bestMove = legalMoves[i];
         }
     }
 
@@ -86,6 +116,11 @@ std::optional<Move> MinimaxAI::chooseMove(const GameState& state) const {
 
 void MinimaxAI::setSettings(Settings settings) {
     settings.depth = clampDepth(settings.depth);
+    if (settings.threadCount <= 0) {
+        settings.threadCount = defaultThreadCount();
+    } else {
+        settings.threadCount = clampThreadCount(settings.threadCount);
+    }
     settings.marbleWeight = clampWeight(settings.marbleWeight);
     settings.ejectionWeight = clampWeight(settings.ejectionWeight);
     settings.centerWeight = clampWeight(settings.centerWeight);
@@ -102,6 +137,18 @@ void MinimaxAI::setDepth(int depth) {
 
 int MinimaxAI::depth() const {
     return settings_.depth;
+}
+
+void MinimaxAI::setThreadCount(int threadCount) {
+    if (threadCount <= 0) {
+        settings_.threadCount = defaultThreadCount();
+        return;
+    }
+    settings_.threadCount = clampThreadCount(threadCount);
+}
+
+int MinimaxAI::threadCount() const {
+    return settings_.threadCount;
 }
 
 void MinimaxAI::setMarbleWeight(int weight) {
@@ -156,12 +203,18 @@ std::uint64_t MinimaxAI::hashState(const GameState& state) const {
     return splitmix64(GameEngine::hashPosition(state) ^ splitmix64(state.historySignature));
 }
 
+int MinimaxAI::defaultThreadCount() {
+    const unsigned int detected = std::thread::hardware_concurrency();
+    return detected == 0U ? 1 : static_cast<int>(detected);
+}
+
 int MinimaxAI::negamax(
     const GameState& state,
     int depth,
     int alpha,
     int beta,
-    Player currentPlayer
+    Player currentPlayer,
+    TranspositionTable& transpositionTable
 ) const {
     if (depth <= 0 || GameEngine::isGameOver(state)) {
         return evaluate(state, currentPlayer);
@@ -171,8 +224,8 @@ int MinimaxAI::negamax(
     const int betaOriginal = beta;
     const std::uint64_t hash = hashState(state);
 
-    const auto cached = transpositionTable_.find(hash);
-    if (cached != transpositionTable_.end() && cached->second.depth >= depth) {
+    const auto cached = transpositionTable.find(hash);
+    if (cached != transpositionTable.end() && cached->second.depth >= depth) {
         const TranspositionEntry& entry = cached->second;
         if (entry.bound == BoundType::Exact) {
             return entry.score;
@@ -203,7 +256,8 @@ int MinimaxAI::negamax(
             depth - 1,
             -beta,
             -alpha,
-            opponent(currentPlayer)
+            opponent(currentPlayer),
+            transpositionTable
         );
 
         bestScore = std::max(bestScore, score);
@@ -220,7 +274,7 @@ int MinimaxAI::negamax(
         bound = BoundType::Lower;
     }
 
-    transpositionTable_[hash] = TranspositionEntry{depth, bestScore, bound};
+    transpositionTable[hash] = TranspositionEntry{depth, bestScore, bound};
 
     return bestScore;
 }
