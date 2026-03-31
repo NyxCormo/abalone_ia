@@ -39,7 +39,11 @@ set(RENDER_SOURCES
 set(CONSOLE_SOURCES
         src/app/GameAppConsole.cpp
         src/app/GameAppConsole.h
+)
 
+set(AI_SOURCES
+        src/ai/MinimaxAI.cpp
+        src/ai/MinimaxAI.h
 )
 
 add_executable(AbaloneApp3D
@@ -63,6 +67,7 @@ add_executable(AbaloneApp2D
         src/app/GameApp2D.cpp
         src/app/GameApp2D.h
         ${CORE_SOURCES}
+        ${AI_SOURCES}
 )
 
 target_include_directories(AbaloneApp3D PRIVATE src)
