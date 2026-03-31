@@ -1,6 +1,8 @@
 #include "MinimaxAI.h"
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
 #include <limits>
 
 #include "../game/GameEngine.h"
@@ -29,6 +31,59 @@ int clampDepth(int depth) {
 int clampWeight(int weight) {
     return std::max(0, weight);
 }
+
+std::uint64_t splitmix64(std::uint64_t value) {
+    value += 0x9e3779b97f4a7c15ULL;
+    value = (value ^ (value >> 30U)) * 0xbf58476d1ce4e5b9ULL;
+    value = (value ^ (value >> 27U)) * 0x94d049bb133111ebULL;
+    return value ^ (value >> 31U);
+}
+
+std::uint64_t zobristValue(std::uint64_t index) {
+    return splitmix64(index + 1ULL);
+}
+
+constexpr int kPlayableCells = 61;
+constexpr int kMaxEjectedMarbles = 6;
+constexpr int kTurnIndex = 2 * kPlayableCells + 2 * (kMaxEjectedMarbles + 1);
+
+std::uint64_t cellIndex(const Position& pos) {
+    return static_cast<std::uint64_t>((pos.q() + 4) * 9 + (pos.r() + 4));
+}
+
+const std::array<std::uint64_t, kPlayableCells> kBlackCellHashes = [] {
+    std::array<std::uint64_t, kPlayableCells> values{};
+    for (int i = 0; i < kPlayableCells; ++i) {
+        values[i] = zobristValue(static_cast<std::uint64_t>(i));
+    }
+    return values;
+}();
+
+const std::array<std::uint64_t, kPlayableCells> kWhiteCellHashes = [] {
+    std::array<std::uint64_t, kPlayableCells> values{};
+    for (int i = 0; i < kPlayableCells; ++i) {
+        values[i] = zobristValue(static_cast<std::uint64_t>(kPlayableCells + i));
+    }
+    return values;
+}();
+
+const std::array<std::uint64_t, kMaxEjectedMarbles + 1> kBlackEjectedHashes = [] {
+    std::array<std::uint64_t, kMaxEjectedMarbles + 1> values{};
+    for (int i = 0; i <= kMaxEjectedMarbles; ++i) {
+        values[i] = zobristValue(static_cast<std::uint64_t>(2 * kPlayableCells + i));
+    }
+    return values;
+}();
+
+const std::array<std::uint64_t, kMaxEjectedMarbles + 1> kWhiteEjectedHashes = [] {
+    std::array<std::uint64_t, kMaxEjectedMarbles + 1> values{};
+    for (int i = 0; i <= kMaxEjectedMarbles; ++i) {
+        values[i] = zobristValue(static_cast<std::uint64_t>(2 * kPlayableCells + (kMaxEjectedMarbles + 1) + i));
+    }
+    return values;
+}();
+
+const std::uint64_t kWhiteToMoveHash = zobristValue(static_cast<std::uint64_t>(kTurnIndex));
 }
 
 MinimaxAI::MinimaxAI() : MinimaxAI(Settings{}) {}
@@ -38,9 +93,12 @@ MinimaxAI::MinimaxAI(Settings settings) : settings_(settings) {
     settings_.marbleWeight = clampWeight(settings_.marbleWeight);
     settings_.ejectionWeight = clampWeight(settings_.ejectionWeight);
     settings_.centerWeight = clampWeight(settings_.centerWeight);
+    transpositionTable_.reserve(65536);
 }
 
 std::optional<Move> MinimaxAI::chooseMove(const GameState& state) const {
+    transpositionTable_.clear();
+
     std::vector<Move> legalMoves = GameEngine::getLegalMoves(state);
     if (legalMoves.empty()) {
         return std::nullopt;
@@ -137,6 +195,36 @@ int MinimaxAI::evaluate(const GameState& state, Player player) const {
     return marbleDiff + ejectionDiff + centerDiff;
 }
 
+std::uint64_t MinimaxAI::hashState(const GameState& state) const {
+    std::uint64_t hash = 0;
+
+    for (int q = -4; q <= 4; ++q) {
+        for (int r = -4; r <= 4; ++r) {
+            const Position pos(q, r);
+            if (!pos.isValid()) {
+                continue;
+            }
+
+            const Cell cell = state.board.get(pos);
+            if (cell == Cell::Empty) {
+                continue;
+            }
+
+            const std::size_t index = static_cast<std::size_t>(cellIndex(pos));
+            hash ^= cell == Cell::Black ? kBlackCellHashes[index] : kWhiteCellHashes[index];
+        }
+    }
+
+    hash ^= kBlackEjectedHashes[static_cast<std::size_t>(state.board.blackEjected())];
+    hash ^= kWhiteEjectedHashes[static_cast<std::size_t>(state.board.whiteEjected())];
+
+    if (state.currentPlayer == Player::White) {
+        hash ^= kWhiteToMoveHash;
+    }
+
+    return hash;
+}
+
 int MinimaxAI::negamax(
     const GameState& state,
     int depth,
@@ -146,6 +234,26 @@ int MinimaxAI::negamax(
 ) const {
     if (depth <= 0 || GameEngine::isGameOver(state)) {
         return evaluate(state, currentPlayer);
+    }
+
+    const int alphaOriginal = alpha;
+    const int betaOriginal = beta;
+    const std::uint64_t hash = hashState(state);
+
+    const auto cached = transpositionTable_.find(hash);
+    if (cached != transpositionTable_.end() && cached->second.depth >= depth) {
+        const TranspositionEntry& entry = cached->second;
+        if (entry.bound == BoundType::Exact) {
+            return entry.score;
+        }
+        if (entry.bound == BoundType::Lower) {
+            alpha = std::max(alpha, entry.score);
+        } else {
+            beta = std::min(beta, entry.score);
+        }
+        if (alpha >= beta) {
+            return entry.score;
+        }
     }
 
     std::vector<Move> legalMoves = GameEngine::getLegalMoves(state);
@@ -173,5 +281,15 @@ int MinimaxAI::negamax(
             break;
         }
     }
+
+    BoundType bound = BoundType::Exact;
+    if (bestScore <= alphaOriginal) {
+        bound = BoundType::Upper;
+    } else if (bestScore >= betaOriginal) {
+        bound = BoundType::Lower;
+    }
+
+    transpositionTable_[hash] = TranspositionEntry{depth, bestScore, bound};
+
     return bestScore;
 }

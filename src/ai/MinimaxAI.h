@@ -1,7 +1,9 @@
 #ifndef ABALONE_MINIMAXAI_H
 #define ABALONE_MINIMAXAI_H
 
+#include <cstdint>
 #include <optional>
+#include <unordered_map>
 
 #include "../game/GameState.h"
 #include "../game/Move.h"
@@ -31,9 +33,23 @@ public:
     [[nodiscard]] int centerWeight() const;
 
 private:
+    enum class BoundType {
+        Exact,
+        Lower,
+        Upper,
+    };
+
+    struct TranspositionEntry {
+        int depth = 0;
+        int score = 0;
+        BoundType bound = BoundType::Exact;
+    };
+
     Settings settings_;
+    mutable std::unordered_map<std::uint64_t, TranspositionEntry> transpositionTable_;
 
     [[nodiscard]] int evaluate(const GameState& state, Player player) const;
+    [[nodiscard]] std::uint64_t hashState(const GameState& state) const;
     [[nodiscard]] int negamax(
         const GameState& state,
         int depth,
