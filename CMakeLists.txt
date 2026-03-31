@@ -58,5 +58,14 @@ add_executable(AbaloneAppConsole
         ${CONSOLE_SOURCES}
 )
 
+add_executable(AbaloneApp2D
+        src/main2D.cpp
+        src/app/GameApp2D.cpp
+        src/app/GameApp2D.h
+        ${CORE_SOURCES}
+)
+
 target_include_directories(AbaloneApp3D PRIVATE src)
 target_link_libraries(AbaloneApp3D PRIVATE raylib)
+target_include_directories(AbaloneApp2D PRIVATE src)
+target_link_libraries(AbaloneApp2D PRIVATE raylib)
