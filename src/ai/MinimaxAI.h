@@ -33,14 +33,13 @@ public:
 private:
     Settings settings_;
 
-    [[nodiscard]] int evaluate(const GameState& state, Player maximizingPlayer) const;
-    [[nodiscard]] int minimax(
+    [[nodiscard]] int evaluate(const GameState& state, Player player) const;
+    [[nodiscard]] int negamax(
         const GameState& state,
         int depth,
         int alpha,
         int beta,
-        bool maximizing,
-        Player maximizingPlayer
+        Player currentPlayer
     ) const;
 };
 
