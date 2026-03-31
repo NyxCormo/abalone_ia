@@ -108,6 +108,7 @@ GameApp2D::GameApp2D()
       activeSetupField_{std::nullopt},
       setupInputBuffer_{} {
     state_.board.setup();
+    GameEngine::initializeState(state_);
 }
 
 void GameApp2D::run() {
@@ -126,7 +127,7 @@ void GameApp2D::run() {
 void GameApp2D::resetGame() {
     state_ = GameState();
     state_.board.setup();
-    state_.winner.reset();
+    GameEngine::initializeState(state_);
     input_.clearSelection();
     validDirections_.clear();
     hoveredHex_.reset();
@@ -537,7 +538,11 @@ void GameApp2D::renderGameOver() const {
     DrawRectangle(0, 0, screenWidth_, screenHeight_, Fade(BLACK, 0.35f));
     DrawRectangleRounded({350.0f, 260.0f, 580.0f, 220.0f}, 0.08f, 12, kPanel);
     DrawText("PARTIE TERMINEE", 425, 300, 40, BLACK);
-    DrawText(TextFormat("Vainqueur : %s", playerLabel(state_.winner.value())), 435, 360, 30, kAccent);
+    if (GameEngine::isDraw(state_)) {
+        DrawText("Resultat : match nul", 435, 360, 30, kAccent);
+    } else {
+        DrawText(TextFormat("Vainqueur : %s", playerLabel(state_.winner.value())), 435, 360, 30, kAccent);
+    }
     DrawText("ENTREE ou R pour revenir au menu", 395, 420, 24, DARKGRAY);
 }
 
@@ -550,7 +555,7 @@ void GameApp2D::performAIMove() {
     const std::optional<Move> move = ai.chooseMove(state_);
 
     if (!move.has_value()) {
-        state_.winner = opponent(state_.currentPlayer);
+        state_.draw = true;
         screenState_ = ScreenState::GameOver;
         return;
     }

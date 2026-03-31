@@ -16,6 +16,7 @@ GameApp3D::GameApp3D()
       isDragging_{false}
 {
     state_.board.setup();
+    GameEngine::initializeState(state_);
 }
 
 void GameApp3D::run() {
@@ -71,9 +72,13 @@ void GameApp3D::handleInput() {
 
                 if (GameEngine::isGameOver(state_)) {
                     gameOver_ = true;
-                    Player winner = state_.winner.value();
                     std::cout << "\n=== GAME OVER ===" << std::endl;
-                    std::cout << "Winner: " << (winner == Player::Black ? "BLACK" : "WHITE") << std::endl;
+                    if (GameEngine::isDraw(state_)) {
+                        std::cout << "Result: DRAW" << std::endl;
+                    } else {
+                        Player winner = state_.winner.value();
+                        std::cout << "Winner: " << (winner == Player::Black ? "BLACK" : "WHITE") << std::endl;
+                    }
                 }
 
                 input_.clearSelection();
@@ -163,6 +168,7 @@ void GameApp3D::render() const {
 void GameApp3D::reset() {
     state_ = GameState();
     state_.board.setup();
+    GameEngine::initializeState(state_);
     gameOver_ = false;
 
     input_.clearSelection();

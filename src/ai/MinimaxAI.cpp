@@ -1,7 +1,6 @@
 #include "MinimaxAI.h"
 
 #include <algorithm>
-#include <array>
 #include <cstdint>
 #include <limits>
 
@@ -38,52 +37,6 @@ std::uint64_t splitmix64(std::uint64_t value) {
     value = (value ^ (value >> 27U)) * 0x94d049bb133111ebULL;
     return value ^ (value >> 31U);
 }
-
-std::uint64_t zobristValue(std::uint64_t index) {
-    return splitmix64(index + 1ULL);
-}
-
-constexpr int kPlayableCells = 61;
-constexpr int kMaxEjectedMarbles = 6;
-constexpr int kTurnIndex = 2 * kPlayableCells + 2 * (kMaxEjectedMarbles + 1);
-
-std::uint64_t cellIndex(const Position& pos) {
-    return static_cast<std::uint64_t>((pos.q() + 4) * 9 + (pos.r() + 4));
-}
-
-const std::array<std::uint64_t, kPlayableCells> kBlackCellHashes = [] {
-    std::array<std::uint64_t, kPlayableCells> values{};
-    for (int i = 0; i < kPlayableCells; ++i) {
-        values[i] = zobristValue(static_cast<std::uint64_t>(i));
-    }
-    return values;
-}();
-
-const std::array<std::uint64_t, kPlayableCells> kWhiteCellHashes = [] {
-    std::array<std::uint64_t, kPlayableCells> values{};
-    for (int i = 0; i < kPlayableCells; ++i) {
-        values[i] = zobristValue(static_cast<std::uint64_t>(kPlayableCells + i));
-    }
-    return values;
-}();
-
-const std::array<std::uint64_t, kMaxEjectedMarbles + 1> kBlackEjectedHashes = [] {
-    std::array<std::uint64_t, kMaxEjectedMarbles + 1> values{};
-    for (int i = 0; i <= kMaxEjectedMarbles; ++i) {
-        values[i] = zobristValue(static_cast<std::uint64_t>(2 * kPlayableCells + i));
-    }
-    return values;
-}();
-
-const std::array<std::uint64_t, kMaxEjectedMarbles + 1> kWhiteEjectedHashes = [] {
-    std::array<std::uint64_t, kMaxEjectedMarbles + 1> values{};
-    for (int i = 0; i <= kMaxEjectedMarbles; ++i) {
-        values[i] = zobristValue(static_cast<std::uint64_t>(2 * kPlayableCells + (kMaxEjectedMarbles + 1) + i));
-    }
-    return values;
-}();
-
-const std::uint64_t kWhiteToMoveHash = zobristValue(static_cast<std::uint64_t>(kTurnIndex));
 }
 
 MinimaxAI::MinimaxAI() : MinimaxAI(Settings{}) {}
@@ -116,7 +69,7 @@ std::optional<Move> MinimaxAI::chooseMove(const GameState& state) const {
         const GameState nextState = GameEngine::applyMove(state, move);
         const int score = -negamax(
             nextState,
-            settings_.depth - 1,
+            settings_.depth,
             std::numeric_limits<int>::min() + 1,
             std::numeric_limits<int>::max(),
             opponent(player)
@@ -176,6 +129,10 @@ int MinimaxAI::centerWeight() const {
 }
 
 int MinimaxAI::evaluate(const GameState& state, Player player) const {
+    if (GameEngine::isDraw(state)) {
+        return 0;
+    }
+
     if (state.winner.has_value()) {
         return state.winner.value() == player ? 100000 : -100000;
     }
@@ -196,33 +153,7 @@ int MinimaxAI::evaluate(const GameState& state, Player player) const {
 }
 
 std::uint64_t MinimaxAI::hashState(const GameState& state) const {
-    std::uint64_t hash = 0;
-
-    for (int q = -4; q <= 4; ++q) {
-        for (int r = -4; r <= 4; ++r) {
-            const Position pos(q, r);
-            if (!pos.isValid()) {
-                continue;
-            }
-
-            const Cell cell = state.board.get(pos);
-            if (cell == Cell::Empty) {
-                continue;
-            }
-
-            const std::size_t index = static_cast<std::size_t>(cellIndex(pos));
-            hash ^= cell == Cell::Black ? kBlackCellHashes[index] : kWhiteCellHashes[index];
-        }
-    }
-
-    hash ^= kBlackEjectedHashes[static_cast<std::size_t>(state.board.blackEjected())];
-    hash ^= kWhiteEjectedHashes[static_cast<std::size_t>(state.board.whiteEjected())];
-
-    if (state.currentPlayer == Player::White) {
-        hash ^= kWhiteToMoveHash;
-    }
-
-    return hash;
+    return splitmix64(GameEngine::hashPosition(state) ^ splitmix64(state.historySignature));
 }
 
 int MinimaxAI::negamax(

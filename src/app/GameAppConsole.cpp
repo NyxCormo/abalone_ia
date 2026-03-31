@@ -11,6 +11,7 @@
 
 GameAppConsole::GameAppConsole() : state_() {
     state_.board.setup();
+    GameEngine::initializeState(state_);
 }
 
 void GameAppConsole::run() {
@@ -116,7 +117,9 @@ void GameAppConsole::displayGameOver() const {
     std::cout << "║           PARTIE TERMINÉE !                ║\n";
     std::cout << "╠════════════════════════════════════════════╣\n";
 
-    if (state_.winner.has_value()) {
+    if (GameEngine::isDraw(state_)) {
+        std::cout << "║ Resultat    : " << std::left << std::setw(27) << "MATCH NUL" << "║\n";
+    } else if (state_.winner.has_value()) {
         Player winner = state_.winner.value();
         std::string winnerStr = (winner == Player::Black) ? "NOIR ⚪" : "BLANC ⚫";
         std::cout << "║ Vainqueur   : " << std::left << std::setw(27) << winnerStr << "║\n";

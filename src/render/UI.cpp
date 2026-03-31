@@ -67,8 +67,6 @@ void UI::drawGameOver(const GameState& state) {
         DrawRectangle(panelX_, panelY_, panelWidth_, panelHeight_, {100, 100, 100, 100});
     }
 
-    Player winner = state.winner.value();
-
     int screenWidth = GetScreenWidth();
     int screenHeight = GetScreenHeight();
     int centerX = screenWidth / 2;
@@ -116,16 +114,22 @@ void UI::drawGameOver(const GameState& state) {
     DrawText(gameOverText, centerX - gameOverWidth / 2 + 3, centerY - 100 + 3, 60, {0, 0, 0, 100});
     DrawText(gameOverText, centerX - gameOverWidth / 2, centerY - 100, 60, {220, 50, 50, 255});
 
-    const char* winnerLabel = "Winner:";
-    int winnerLabelWidth = MeasureText(winnerLabel, 40);
-    DrawText(winnerLabel, centerX - winnerLabelWidth / 2 + 2, centerY - 20 + 2, 40, {0, 0, 0, 100});
-    DrawText(winnerLabel, centerX - winnerLabelWidth / 2, centerY - 20, 40, {50, 200, 50, 255});
+    const char* outcomeLabel = GameEngine::isDraw(state) ? "Result:" : "Winner:";
+    int outcomeLabelWidth = MeasureText(outcomeLabel, 40);
+    DrawText(outcomeLabel, centerX - outcomeLabelWidth / 2 + 2, centerY - 20 + 2, 40, {0, 0, 0, 100});
+    DrawText(outcomeLabel, centerX - outcomeLabelWidth / 2, centerY - 20, 40, {50, 200, 50, 255});
 
-    const char* winnerName = winner == Player::Black ? "BLACK" : "WHITE";
-    Color winnerColor = winner == Player::Black ? BLACK : Color{240, 240, 240, 255};
-    int winnerNameWidth = MeasureText(winnerName, 48);
-    DrawText(winnerName, centerX - winnerNameWidth / 2 + 2, centerY + 30 + 2, 48, {0, 0, 0, 120});
-    DrawText(winnerName, centerX - winnerNameWidth / 2, centerY + 30, 48, winnerColor);
+    const char* outcomeName = "DRAW";
+    Color outcomeColor = {240, 240, 240, 255};
+    if (!GameEngine::isDraw(state)) {
+        const Player winner = state.winner.value();
+        outcomeName = winner == Player::Black ? "BLACK" : "WHITE";
+        outcomeColor = winner == Player::Black ? BLACK : Color{240, 240, 240, 255};
+    }
+
+    int outcomeNameWidth = MeasureText(outcomeName, 48);
+    DrawText(outcomeName, centerX - outcomeNameWidth / 2 + 2, centerY + 30 + 2, 48, {0, 0, 0, 120});
+    DrawText(outcomeName, centerX - outcomeNameWidth / 2, centerY + 30, 48, outcomeColor);
 
     const char* restartText = "Press R to restart";
     int restartWidth = MeasureText(restartText, 28);
